@@ -1,1134 +1,1624 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hand Gesture Particle System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Happy New Year Em yêu</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎄</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&family=Cinzel:wght@400;700&family=Pinyon+Script&display=swap"
+        rel="stylesheet">
     <style>
         body {
             margin: 0;
             overflow: hidden;
-            background-color: #050505;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f0505;
+            font-family: 'Cinzel', serif;
             user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        #canvas-container {
+        #bg-gradient {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 15; /* Higher than camera-wrapper */
-            pointer-events: none;
-        }
-
-        /* COMPACT UI */
-        #ui-layer {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            z-index: 20;
-            color: #ff69b4; 
-            background: rgba(0, 0, 0, 0.6);
-            padding: 12px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 105, 180, 0.2);
-            font-size: 12px;
-            line-height: 1.4;
-            width: 210px;
-            backdrop-filter: blur(6px);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-            pointer-events: auto;
-            transition: height 0.3s ease;
-        }
-
-        #ui-layer.collapsed {
-            width: auto;
-            min-width: 120px;
-        }
-        
-        #ui-layer.collapsed #ui-content {
-            display: none;
-        }
-
-        .ui-header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            padding-bottom: 4px;
-            margin-bottom: 8px;
-        }
-
-        #ui-layer h1 {
-            margin: 0;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #fff;
-            pointer-events: none;
-        }
-
-        #btn-collapse {
-            background: none;
-            border: none;
-            color: #ff69b4;
-            font-weight: bold;
-            font-size: 16px;
-            cursor: pointer;
-            padding: 0 5px;
-            line-height: 1;
-        }
-        #btn-collapse:hover {
-            color: #fff;
-        }
-
-        .stat-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 4px;
-            pointer-events: none;
-        }
-
-        .value {
-            font-weight: bold;
-            color: #fff;
-        }
-
-        /* Voice Toggle Button */
-        #btn-voice {
-            width: 100%;
-            margin-top: 5px;
-            margin-bottom: 8px;
-            padding: 8px;
-            background: rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255, 105, 180, 0.3);
-            border-radius: 6px;
-            color: #ddd;
-            cursor: pointer;
-            font-size: 11px;
-            text-transform: uppercase;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-
-        #btn-voice:hover {
-            background: rgba(255, 105, 180, 0.2);
-            color: #fff;
-        }
-
-        #btn-voice.active {
-            background: rgba(0, 255, 255, 0.2); 
-            color: #0ff;
-            border-color: #0ff;
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
-        }
-
-        /* Draggable & Resizable Camera Wrapper */
-        #camera-wrapper {
-            position: absolute;
-            bottom: 15px;
-            right: 15px;
-            width: 200px;
-            height: 150px;
-            z-index: 18; /* Higher than canvas-container (15) */
-            background: rgba(0,0,0,0.5);
-            border: 1px solid #444;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            resize: both; /* Enable resizing */
-            overflow: hidden; /* Required for resize handle */
-            min-width: 100px;
-            min-height: 80px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            pointer-events: auto;
-        }
-
-        #camera-handle {
-            background: rgba(255, 105, 180, 0.2);
-            color: #ccc;
-            font-size: 10px;
-            text-align: center;
-            cursor: grab;
-            padding: 2px 0;
-            user-select: none;
-            flex-shrink: 0;
-        }
-        #camera-handle:active {
-            cursor: grabbing;
-            background: rgba(255, 105, 180, 0.4);
-        }
-
-        #webcam-preview {
             width: 100%;
             height: 100%;
-            object-fit: cover;
-            transform: scaleX(-1); 
-            opacity: 0.8;
-            pointer-events: none; /* Let events pass to wrapper for resize */
+            z-index: -2;
+            background: radial-gradient(circle at 50% 40%, #7b0d1e 0%, #4a0e16 50%, #1a0505 100%);
         }
 
-        /* Fullscreen override for AR mode */
-        #camera-wrapper.fullscreen {
-            width: 100vw !important;
-            height: 100vh !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: auto !important;
-            bottom: auto !important;
-            border: none;
-            border-radius: 0;
-            resize: none;
-            background: black;
-            z-index: 1 !important; /* Move BEHIND canvas-container (15) in AR mode */
-            pointer-events: none; /* Let clicks pass through to canvas if needed */
+        #black-void {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 5;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 1.5s ease;
         }
-        
-        #camera-wrapper.fullscreen #camera-handle {
+
+        #frost-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            pointer-events: none;
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.9);
+            background: radial-gradient(circle, transparent 60%, rgba(20, 0, 5, 0.4) 100%);
+        }
+
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 2;
+        }
+
+        #firework-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 6;
+            pointer-events: none;
             display: none;
         }
-        
-        #camera-wrapper.fullscreen #webcam-preview {
-            opacity: 1.0;
+
+        #ui-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 10vh;
+            transition: opacity 0.5s;
         }
 
-        #loading {
+        #main-title {
+            font-family: 'Pinyon Script', cursive;
+            font-size: 15vw;
+            color: #eebb66;
+            margin: 0;
+            text-shadow: 0 2px 5px rgba(255, 215, 0, 0.3);
+            animation: floatTitle 4s ease-in-out infinite;
+            background: linear-gradient(to bottom, #fceabb 0%, #fccd4d 50%, #f8b500 51%, #fbdf93 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        #mode-indicator {
+            font-family: 'Cinzel', serif;
+            font-size: 3vw;
+            font-weight: 700;
+            color: #FFD700;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-top: 10px;
+            border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+            padding-bottom: 5px;
+        }
+
+        #secret-message {
+            position: absolute;
+            top: 35%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            font-size: 8vw;
+            width: 90%;
+            white-space: normal;
+            line-height: 1.3;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            text-align: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            background: linear-gradient(to bottom, #fff8db 0%, #FFD700 40%, #DAA520 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            transition: opacity 1.5s ease;
+        }
+
+        #ending-section {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: white;
-            z-index: 30;
-            font-size: 18px;
+            width: 90%;
+            max-width: 600px;
             text-align: center;
-            background: rgba(0,0,0,0.8);
-            padding: 20px;
-            border-radius: 12px;
+            z-index: 100;
+            opacity: 0;
             pointer-events: none;
+            transition: opacity 2s ease;
         }
 
-        #voice-indicator {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background-color: #555;
-            transition: all 0.2s;
+        #ending-title {
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            font-size: 6vw;
+            margin: 0 0 20px 0;
+            background: linear-gradient(to bottom, #fff8db 0%, #FFD700 40%, #ff6b6b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+            animation: glowPulse 2s ease-in-out infinite;
         }
-        #voice-indicator.listening {
-            background-color: #00ff00;
-            box-shadow: 0 0 6px #00ff00;
+
+        #ending-greeting {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-weight: 600;
+            font-size: 4vw;
+            color: #fff;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.3);
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.3); }
+        }
+
+        @media (min-width: 768px) {
+            #ending-title {
+                font-size: 48px;
+            }
+            #ending-greeting {
+                font-size: 22px;
+            }
+        }
+
+        #lyrics-container {
+            position: absolute;
+            bottom: 20%;
+            width: 100%;
+            text-align: center;
+            z-index: 20;
+            pointer-events: none
+        }
+
+        #lyrics-text {
+            font-family: 'Pinyon Script', cursive;
+            font-size: 6vw;
+            color: #fff0f5;
+            text-shadow: 0 0 5px rgba(255, 200, 200, 0.5);
+            padding: 0 20px;
+            transition: all 0.3s ease;
+        }
+
+        #webcam-wrapper {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 100px;
+            height: 75px;
+            z-index: 50;
+            background: #000;
+            border: 1px solid #FFD700;
+            border-radius: 4px;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+            overflow: hidden;
+            opacity: 0.6;
+        }
+
+        #webcam-canvas {
+            width: 100%;
+            height: 100%;
+            transform: scaleX(-1);
+            border-radius: 2px;
+        }
+
+        #cam-stats {
+            display: none;
+        }
+
+        #start-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 5, 5, 0.9);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: opacity .8s
+        }
+
+        .start-btn {
+            border: 1px solid #eebb66;
+            padding: 15px 30px;
+            color: #eebb66;
+            font-size: 14px;
+            font-family: 'Cinzel', serif;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            background: rgba(0, 0, 0, 0.6);
+            margin-bottom: 15px;
+            box-shadow: 0 0 20px rgba(238, 187, 102, 0.2);
+            transition: all 0.3s;
+        }
+
+        .start-note {
+            color: #886666;
+            font-size: 12px;
+            font-style: italic;
+        }
+
+        #touch-hint {
+            position: absolute;
+            bottom: 100px;
+            width: 100%;
+            text-align: center;
+            font-size: 10px;
+            color: rgba(255, 215, 0, 0.5);
+            pointer-events: none;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        @keyframes floatTitle {
+
+            0%,
+            100% {
+                transform: translateY(0)
+            }
+
+            50% {
+                transform: translateY(-8px)
+            }
+        }
+
+        @media (min-width: 768px) {
+            #main-title {
+                font-size: 80px;
+            }
+
+            #mode-indicator {
+                font-size: 9px;
+            }
+
+            #secret-message {
+                font-size: 5vw;
+                width: 80%;
+            }
+
+            #lyrics-text {
+                font-size: 32px;
+            }
+
+            #webcam-wrapper {
+                width: 150px;
+                height: 112px;
+                opacity: 1;
+            }
+
+            #cam-stats {
+                display: block;
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                text-align: center;
+                font-family: 'Cinzel', serif;
+                font-size: 6px;
+                font-weight: 700;
+                color: #FFD700;
+                letter-spacing: 2px;
+                text-transform: uppercase;
+                z-index: 26;
+                background: rgba(0, 0, 0, 0.8);
+                padding: 4px 0;
+                border-top: 1px solid #FFD700;
+            }
         }
     </style>
-
-    <!-- Three.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    
-    <!-- MediaPipe Hands -->
+    <!-- Importmap removed, using local node_modules with Vite -->
+    <!-- <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script> -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils/drawing_utils.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
-    <style>
-        /* Fix for GitHub Pages 404s */
-    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
 </head>
-<body>
 
-    <div id="loading">Starting System...<br><span style="font-size:14px; color:#aaa;">Allow Camera & Mic</span></div>
+<body>
+    <div id="black-void"></div>
+    <div id="bg-gradient"></div>
+    <div id="frost-overlay"></div>
+
+    <div id="canvas-container"></div>
+    <canvas id="firework-canvas"></canvas>
+
+    <div id="secret-message">HAPPY NEW YEAR</div>
+    <div id="ending-section">
+        <h1 id="ending-title">✨ HAPPY NEW YEAR 2026 ✨</h1>
+        <p id="ending-greeting">Chúc mừng năm mới! Mong rằng năm 2026 sẽ mang đến cho chúng ta thật nhiều niềm vui, hạnh phúc và những khoảnh khắc đáng nhớ bên nhau. Yêu em rất nhiều! ❤️</p>
+    </div>
 
     <div id="ui-layer">
-        <div class="ui-header-row">
-            <h1>Controls</h1>
-            <button id="btn-collapse">−</button>
-        </div>
-        
-        <div id="ui-content">
-            <button id="btn-voice">
-                <div id="voice-indicator"></div>
-                <span id="voice-btn-text">Enable Voice Mode</span>
-            </button>
+        <h1 id="main-title">HAPPY NEW YEAR my Bae</h1>
+        <div id="mode-indicator">INTERACTIVE JAR</div>
+        <div id="touch-hint">SWIPE TO ROTATE &bull; TAP TO SWITCH</div>
+    </div>
+    <div id="start-overlay">
+        <div class="start-btn">CHẠM ĐỂ BẮT ĐẦU</div>
+        <div class="start-note">♫ HAPPY NEW YEAR</div>
+        <div style="font-size: 10px; color: #886666; margin-top: 15px;">36 khoảnh khắc đang chờ bạn</div>
+    </div>
+    <div id="lyrics-container"><span id="lyrics-text">...</span></div>
 
-            <div class="stat-row">
-                <span>Gesture/Word:</span>
-                <span id="gesture-val" class="value">...</span>
-            </div>
-            <div class="stat-row">
-                <span>Fingers:</span>
-                <span id="finger-val" class="value">0</span>
-            </div>
-            
-            <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 5px 0;">
-            <div style="font-size: 11px; color: #ddd; pointer-events: none;">
-                <b>Voice Mode ON:</b><br>
-                🎤 Say ANY word<br>
-                👋 Touch text to scatter<br>
-                <br>
-                <b>Voice Mode OFF:</b><br>
-                ☝️ 1: "I"<br>
-                ✌️ 2: "LOVE"<br>
-                🤟 3: "YOU"<br>
-                ✋ 4: "I LOVE YOU"<br>
-                ✊ Fist: Shrink
-            </div>
-        </div>
+    <div id="webcam-wrapper">
+        <div id="cam-stats">SCAN | AI-LITE</div>
+        <canvas id="webcam-canvas"></canvas>
     </div>
 
-    <!-- Camera Wrapper for Drag & Resize -->
-    <div id="camera-wrapper">
-        <div id="camera-handle">:: Drag to Move ::</div>
-        <video id="webcam-preview" playsinline></video>
-    </div>
-    
-    <div id="canvas-container"></div>
+    <video id="input_video" style="display:none; transform: scaleX(-1)" playsinline></video>
+    <audio id="bg-music" src="" loop></audio>
 
-    <script>
-        /**
-         * CONFIGURATION
-         */
-        const CONFIG = {
-            particleCount: 40000, 
-            text1: "I",
-            text2: "LOVE",
-            text3: "YOU",
-            text4: "I LOVE YOU",
-            particleSize: 0.08, 
-            scatterRadius: 35,
-            textScale: 0.055,
-            camZ: 40,
-            interactionRadius: 8.0, 
-            repulsionStrength: 8.0 
+
+    <!-- Missing script removed -->
+    <!-- <script src="./detect-devtools.js"></script> -->
+    <script type='text/javascript'>
+        // Bypass for developers (kept for structure, though script removed)
+        const keyName = 'key';
+        const keyValue = '9ac7ec230e0e4513578f309d6d3579ad';
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+        import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+        import PHOTO_MESSAGES from './messages.js';
+
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth < 800;
+
+        const ENABLE_POST_PROCESSING = true;
+
+        const PARTICLE_RATIO = isMobile ? 0.3 : 1.0;
+
+        const AI_SKIP_FRAMES = isMobile ? 8 : 2;
+
+        // Dữ liệu mặc định - các giá trị fix cứng
+        const FIXED_VALUES = {
+            mainTitle: 'Happy New Year',
+            textEffectSeq: 'Happy |New Year',
+            messages: []
         };
 
-        /**
-         * STATE MANAGEMENT
-         */
-        const state = {
-            targetGestureLabel: "Waiting...",
-            currentWeights: [0, 0, 0, 0, 0], 
-            targetWeights: [0, 0, 0, 0, 0],
-            
-            spreadTarget: 1.0, 
-            currentSpread: 1.0, 
-            
-            scatterScaleTarget: 1.0, 
-            currentScatterScale: 1.0,
-
-            fingerCount: 0,
-            galaxyEffectActive: false, 
-            
-            voiceModeActive: false,
-            wasVoiceModeActive: false,
-            voiceEnabledByUser: false, 
-
-            // Rotation Logic
-            handPositionRaw: { x: 0.5, y: 0.5 },
-            
-            // Interaction Physics Logic
-            handPositions: [], 
-            isHandDetected: false
+        let NOEL_DATA = {
+            mainTitle: FIXED_VALUES.mainTitle,
+            secretMessage: 'HAPPY NEW YEAR',
+            textEffectSeq: FIXED_VALUES.textEffectSeq,
+            messages: FIXED_VALUES.messages,
+            images: [],
+            song: './audio.mp3', // Local audio file
+            songName: 'Last Christmas', // Fix cứng
+            firework: false,
+            LYRICS_DATA: [
+  { "time": 5.50, "text": "Tạm biệt năm cũ qua" },
+  { "time": 7.50, "text": "Chào mừng năm mới đến" },
+  { "time": 9.50, "text": "Tạm biệt những niềm vui" },
+  { "time": 11.50, "text": "Và cả những nỗi buồn" },
+  { "time": 13.50, "text": "Xin cảm ơn mọi chuyện đã diễn ra" },
+  { "time": 16.50, "text": "Dạy cho tôi trưởng thành hơn" },
+  { "time": 19.50, "text": "Bỏ qua đi hết những dỗi hờn" },
+  { "time": 23.50, "text": "Chỉ còn vài ngày nữa thôi" },
+  { "time": 25.50, "text": "Vài khoảnh khắc nữa thôi" },
+  { "time": 29.50, "text": "Là sang một năm mới rồi" },
+  { "time": 32.00, "text": "Cùng nhìn lại năm đã qua" },
+  { "time": 34.50, "text": "Được và mất những gì" },
+  { "time": 38.00, "text": "Để biết mình thiếu sót chi" },
+  { "time": 40.50, "text": "Dẫu có những thăng trầm qua" },
+  { "time": 42.50, "text": "Đôi khi bờ mi để nước mắt rơi... ướt nhòa" },
+  { "time": 48.00, "text": "Và thật may mắn khi kế bên" },
+  { "time": 51.00, "text": "Luôn có mọi người yêu thương" },
+  { "time": 55.00, "text": "Tạm biệt năm cũ qua" },
+  { "time": 57.00, "text": "Chào mừng năm mới đến" },
+  { "time": 59.00, "text": "Tạm biệt những niềm vui" },
+  { "time": 101.00, "text": "Và cả những nỗi buồn" },
+  { "time": 103.50, "text": "Xin cảm ơn mọi chuyện đã diễn ra" },
+  { "time": 106.50, "text": "Dạy cho tôi trưởng thành hơn" },
+  { "time": 109.50, "text": "Bỏ qua đi hết những dỗi hờn" },
+  { "time": 112.00, "text": "Tạm biệt năm cũ qua" },
+  { "time": 114.00, "text": "Chào mừng năm mới đến" },
+  { "time": 116.00, "text": "Thầm cầu chúc bình an" },
+  { "time": 118.00, "text": "Sức khỏe mãi vững bền" },
+  { "time": 120.50, "text": "Năm mới thêm một tuổi mạnh mẽ hơn" },
+  { "time": 123.50, "text": "Không còn buồn phiền cô đơn" },
+  { "time": 126.50, "text": "Giữ mãi trên môi nụ cười tươi" },
+  { "time": 129.50, "text": "Và đôi mắt rạng ngời" },
+  { "time": 146.50, "text": "Chỉ còn vài ngày nữa thôi" },
+  { "time": 148.50, "text": "Vài khoảnh khắc nữa thôi" },
+  { "time": 152.50, "text": "Là sang một năm mới rồi" },
+  { "time": 155.00, "text": "Cùng nhìn lại năm đã qua" },
+  { "time": 157.50, "text": "Được và mất những gì" },
+  { "time": 161.00, "text": "Để biết mình thiếu sót chi" },
+  { "time": 163.50, "text": "Dẫu có những thăng trầm qua" },
+  { "time": 165.50, "text": "Đôi khi bờ mi để nước mắt rơi... ướt nhòa" },
+  { "time": 171.00, "text": "Và thật may mắn khi kế bên" },
+  { "time": 174.00, "text": "Luôn có mọi người yêu thương" },
+  { "time": 177.50, "text": "Tạm biệt năm cũ qua" },
+  { "time": 180.00, "text": "Chào mừng năm mới đến" },
+  { "time": 182.00, "text": "Tạm biệt những niềm vui" },
+  { "time": 184.00, "text": "Và cả những nỗi buồn" },
+  { "time": 186.50, "text": "Xin cảm ơn mọi chuyện đã diễn ra" },
+  { "time": 189.50, "text": "Dạy cho tôi trưởng thành hơn" },
+  { "time": 192.50, "text": "Bỏ qua đi hết những dỗi hờn" },
+  { "time": 195.00, "text": "Tạm biệt năm cũ qua" },
+  { "time": 197.00, "text": "Chào mừng năm mới đến" },
+  { "time": 199.00, "text": "Thầm cầu chúc bình an" },
+  { "time": 201.00, "text": "Sức khỏe mãi vững bền" },
+  { "time": 203.50, "text": "Năm mới thêm một tuổi mạnh mẽ hơn" },
+  { "time": 206.50, "text": "Không còn buồn phiền cô đơn" },
+  { "time": 209.50, "text": "Giữ mãi trên môi nụ cười tươi" },
+  { "time": 212.50, "text": "Và đôi mắt rạng ngời" },
+  { "time": 252.50, "text": "Tạm biệt, tạm biệt năm cũ qua" },
+  { "time": 256.50, "text": "Tạm biệt, tạm biệt..." },
+  { "time": 300.50, "text": "Tạm biệt, tạm biệt năm cũ qua" },
+  { "time": 304.50, "text": "Tạm biệt, tạm biệt..." },
+  { "time": 308.50, "text": "Tạm biệt năm cũ qua" },
+  { "time": 310.50, "text": "Chào mừng năm mới đến" },
+  { "time": 312.50, "text": "Tạm biệt những niềm vui" },
+  { "time": 314.50, "text": "Và cả những nỗi buồn" },
+  { "time": 317.00, "text": "Xin cảm ơn mọi chuyện đã diễn ra" },
+  { "time": 320.00, "text": "Dạy cho tôi trưởng thành hơn" },
+  { "time": 323.00, "text": "Bỏ qua đi hết những dỗi hờn" },
+  { "time": 325.50, "text": "Tạm biệt năm cũ qua" },
+  { "time": 327.50, "text": "Chào mừng năm mới đến" },
+  { "time": 329.50, "text": "Thầm cầu chúc bình an" },
+  { "time": 331.50, "text": "Sức khỏe mãi vững bền" },
+  { "time": 334.00, "text": "Năm mới thêm một tuổi mạnh mẽ hơn" },
+  { "time": 337.00, "text": "Không còn buồn phiền cô đơn" },
+  { "time": 340.00, "text": "Giữ mãi trên môi nụ cười tươi" },
+  { "time": 343.00, "text": "Và đôi mắt rạng ngời" }
+]
         };
 
-        /**
-         * UI INTERACTION LOGIC (Collapse & Drag)
-         */
-        
-        // 1. Collapse UI
-        const btnCollapse = document.getElementById('btn-collapse');
-        const uiLayer = document.getElementById('ui-layer');
-        btnCollapse.addEventListener('click', () => {
-            uiLayer.classList.toggle('collapsed');
-            btnCollapse.innerText = uiLayer.classList.contains('collapsed') ? '+' : '−';
-        });
+        // Hàm load dữ liệu đã được sửa lại để chạy Offline/Online với remote assets
+        async function loadNoelData() {
+            console.log('ℹ️ Đang chạy chế độ với assets local');
 
-        // 2. Drag Camera
-        const camWrapper = document.getElementById('camera-wrapper');
-        const camHandle = document.getElementById('camera-handle');
-        let isDragging = false;
-        let dragOffset = { x: 0, y: 0 };
-
-        camHandle.addEventListener('mousedown', (e) => {
-            if (state.voiceModeActive) return; // Disable drag in full screen
-            isDragging = true;
-            const rect = camWrapper.getBoundingClientRect();
-            dragOffset.x = e.clientX - rect.left;
-            dragOffset.y = e.clientY - rect.top;
-            
-            // Switch from bottom/right positioning to top/left for dragging logic
-            camWrapper.style.bottom = 'auto';
-            camWrapper.style.right = 'auto';
-            camWrapper.style.left = rect.left + 'px';
-            camWrapper.style.top = rect.top + 'px';
-        });
-
-        window.addEventListener('mousemove', (e) => {
-            if (isDragging) {
-                camWrapper.style.left = (e.clientX - dragOffset.x) + 'px';
-                camWrapper.style.top = (e.clientY - dragOffset.y) + 'px';
+            // 2. Load 36 ảnh cố định từ thư mục Img
+            // 2. Load 36 ảnh cố định từ thư mục Img
+            if (NOEL_DATA.images.length === 0) {
+                // Danh sách 36 ảnh theo tên file thực tế trong folder (cập nhật chính xác 100%)
+                const imageFiles = [
+                    '1.png', '2.jpg', '3.png', '4.jpg', '5.png', '6.png', '7.png', '8.jpg', '9.jpg', '10.jpg',
+                    '11.jpg', '12.jpg', '13.jpg', '14.png', '15.jpg', '16.jpg', '17.jpg', '18.jpg', '19.jpg', '20.png',
+                    '21.jpg', '22.jpg', '23.jpg', '24.jpg', '25.jpg', '26.jpg', '27.jpg', '28.jpg', '29.jpg', '30.jpg',
+                    '31.jpg', '32.jpg', '33.webp', '34.jpg', '35.jpg', '36.png'
+                ];
+                NOEL_DATA.images = imageFiles.map(f => `./Img/${f}`);
             }
-        });
 
-        window.addEventListener('mouseup', () => {
-            isDragging = false;
-        });
+            // 3. Các cài đặt khác (bạn có thể sửa chữ ở đây)
+            NOEL_DATA.secretMessage = 'HAPPY NEW YEAR'; // Lời chúc bí mật
+            NOEL_DATA.firework = true; // Bật pháo hoa (true: bật, false: tắt)
 
+            // Giả lập độ trễ nhỏ để giống như đang load (tùy chọn)
+            await new Promise(r => setTimeout(r, 500));
+        }
 
-        /**
-         * THREE.JS SETUP
-         */
-        const container = document.getElementById('canvas-container');
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x050505);
-        scene.fog = new THREE.FogExp2(0x050505, 0.012);
+        // Số lượng ảnh cố định là 36
+        let TOTAL_PHOTOS = 36;
+        let LYRICS_DATA = NOEL_DATA.LYRICS_DATA;
 
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.z = CONFIG.camZ;
+        // Biến theo dõi ảnh hiện tại để xem tuần tự
+        let currentPhotoIndex = 0;
 
-        const vFOV = THREE.MathUtils.degToRad(camera.fov);
-        const heightAtZero = 2 * Math.tan(vFOV / 2) * camera.position.z;
-        const widthAtZero = heightAtZero * camera.aspect;
+        // Hàm random 10 ảnh thành 20 ảnh, đảm bảo không lặp lại gần nhau
+        function randomizeImages(images, targetCount) {
+            if (images.length === 0) return [];
+            if (images.length >= targetCount) return images.slice(0, targetCount);
 
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(window.devicePixelRatio);
-        container.appendChild(renderer.domElement);
+            const result = new Array(targetCount).fill(null);
+            const minDistance = Math.max(2, Math.floor(targetCount / images.length)); // Khoảng cách tối thiểu giữa 2 ảnh giống nhau
 
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.autoRotate = false; 
-        controls.enableZoom = false;
+            // Tạo danh sách các ảnh cần đặt (mỗi ảnh sẽ xuất hiện ~targetCount/images.length lần)
+            const imagesToPlace = [];
+            const timesPerImage = Math.floor(targetCount / images.length);
+            const remainder = targetCount % images.length;
 
-        window.addEventListener('resize', () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        /**
-         * PARTICLE SYSTEM & TEXT GENERATION
-         */
-        
-        // Dynamic Text Generator (Reuse for Voice)
-        function generateTextCoordinates(text, step = 2, scaleOverride = null) {
-            console.log(`Generating text coords for: "${text}"`);
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const width = 3000; 
-            const height = 800;
-            canvas.width = width;
-            canvas.height = height;
-
-            ctx.fillStyle = 'black';
-            ctx.fillRect(0, 0, width, height);
-            ctx.fillStyle = 'white';
-            ctx.font = '900 250px Arial, sans-serif'; // Simplified font
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(text, width / 2, height / 2);
-
-            const imageData = ctx.getImageData(0, 0, width, height);
-            const data = imageData.data;
-            const coords = [];
-
-            const finalScale = scaleOverride || CONFIG.textScale;
-
-            for (let y = 0; y < height; y += step) { 
-                for (let x = 0; x < width; x += step) {
-                    const i = (y * width + x) * 4;
-                    if (data[i] > 128) {
-                        const pX = (x - width / 2) * finalScale;
-                        const pY = -(y - height / 2) * finalScale;
-                        coords.push(new THREE.Vector3(pX, pY, 0));
-                    }
+            images.forEach((img, index) => {
+                const count = timesPerImage + (index < remainder ? 1 : 0);
+                for (let i = 0; i < count; i++) {
+                    imagesToPlace.push({ img, originalIndex: index });
                 }
-            }
-            console.log(`Generated ${coords.length} points for "${text}"`);
-            return coords;
-        }
-
-        const coordsText1 = generateTextCoordinates(CONFIG.text1, 3); 
-        const coordsText2 = generateTextCoordinates(CONFIG.text2, 3);
-        const coordsText3 = generateTextCoordinates(CONFIG.text3, 3);
-        const coordsText4 = generateTextCoordinates(CONFIG.text4, 3); 
-        let coordsText5 = generateTextCoordinates("HELLO", 2); 
-
-        const particleGeometry = new THREE.BufferGeometry();
-        const positions = new Float32Array(CONFIG.particleCount * 3);
-        const colors = new Float32Array(CONFIG.particleCount * 3);
-        
-        const posScatter = [];
-        const posText1 = [];
-        const posText2 = [];
-        const posText3 = [];
-        const posText4 = [];
-        const posText5 = [];
-
-        function fillPosArray(targetArray, sourceCoords) {
-            targetArray.length = 0; 
-            const depth = 2.0;
-            const noise = 0.2;
-            for (let i = 0; i < CONFIG.particleCount; i++) {
-                if (sourceCoords.length === 0) {
-                     targetArray.push(new THREE.Vector3(0,0,0));
-                     continue;
-                }
-                const index = Math.floor(Math.random() * sourceCoords.length);
-                const p = sourceCoords[index];
-                targetArray.push(new THREE.Vector3(
-                    p.x + (Math.random() - 0.5) * noise,
-                    p.y + (Math.random() - 0.5) * noise,
-                    p.z + (Math.random() - 0.5) * depth
-                ));
-            }
-        }
-
-        for (let i = 0; i < CONFIG.particleCount; i++) {
-            const theta = Math.random() * Math.PI * 2;
-            const phi = Math.acos(Math.random() * 2 - 1);
-            const r = Math.cbrt(Math.random()) * CONFIG.scatterRadius; 
-            const x = r * Math.sin(phi) * Math.cos(theta);
-            const y = r * Math.sin(phi) * Math.sin(theta);
-            const z = r * Math.cos(phi);
-            positions[i * 3] = x;
-            positions[i * 3 + 1] = y;
-            positions[i * 3 + 2] = z;
-            colors[i * 3] = 1; colors[i * 3 + 1] = 1; colors[i * 3 + 2] = 1;
-            posScatter.push(new THREE.Vector3(x, y, z));
-        }
-
-        fillPosArray(posText1, coordsText1);
-        fillPosArray(posText2, coordsText2);
-        fillPosArray(posText3, coordsText3);
-        fillPosArray(posText4, coordsText4);
-        fillPosArray(posText5, coordsText5); 
-
-        particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        particleGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-        const particleMaterial = new THREE.PointsMaterial({
-            vertexColors: true,
-            size: CONFIG.particleSize,
-            transparent: true,
-            opacity: 0.9,
-            blending: THREE.AdditiveBlending,
-            depthWrite: false,
-            sizeAttenuation: true
-        });
-
-        const particleSystem = new THREE.Points(particleGeometry, particleMaterial);
-        scene.add(particleSystem);
-
-        function updateDynamicText(text) {
-            const length = Math.max(text.length, 3);
-            let optimalScale = 0.09; 
-            if (length > 4) {
-                optimalScale = 0.4 / length; 
-            }
-            optimalScale = Math.max(0.035, optimalScale);
-
-            const newCoords = generateTextCoordinates(text, 2, optimalScale);
-            fillPosArray(posText5, newCoords);
-        }
-
-        /**
-         * SYSTEM 3: Galaxy Background 
-         */
-        const galaxyCount = 8000; 
-        const galaxyGeo = new THREE.BufferGeometry();
-        const galaxyPos = new Float32Array(galaxyCount * 3);
-        const galaxyColors = new Float32Array(galaxyCount * 3);
-        
-        for(let i=0; i<galaxyCount; i++) {
-            const r = 20 + Math.random() * 60; 
-            const theta = Math.random() * Math.PI * 2;
-            const phi = Math.acos(Math.random() * 2 - 1);
-            
-            galaxyPos[i*3] = r * Math.sin(phi) * Math.cos(theta);
-            galaxyPos[i*3+1] = r * Math.sin(phi) * Math.sin(theta);
-            galaxyPos[i*3+2] = r * Math.cos(phi);
-
-            const c = new THREE.Color();
-            const rand = Math.random();
-            if(rand < 0.3) c.setHex(0x00ffff); 
-            else if (rand < 0.6) c.setHex(0x0000ff); 
-            else if (rand < 0.8) c.setHex(0x4b0082); 
-            else c.setHex(0xffffff); 
-
-            c.multiplyScalar(0.5 + Math.random() * 0.5);
-
-            galaxyColors[i*3] = c.r;
-            galaxyColors[i*3+1] = c.g;
-            galaxyColors[i*3+2] = c.b;
-        }
-        
-        galaxyGeo.setAttribute('position', new THREE.BufferAttribute(galaxyPos, 3));
-        galaxyGeo.setAttribute('color', new THREE.BufferAttribute(galaxyColors, 3));
-        
-        const galaxyMaterial = new THREE.PointsMaterial({
-            vertexColors: true,
-            size: 0.04, 
-            transparent: true,
-            opacity: 0, 
-            blending: THREE.AdditiveBlending,
-            depthWrite: false
-        });
-        
-        const galaxySystem = new THREE.Points(galaxyGeo, galaxyMaterial);
-        scene.add(galaxySystem);
-
-
-        /**
-         * VOICE RECOGNITION
-         */
-        const voiceBtn = document.getElementById('btn-voice');
-        const voiceIndicator = document.getElementById('voice-indicator');
-        const voiceBtnText = document.getElementById('voice-btn-text');
-
-        let recognition = null;
-
-        if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            recognition = new SpeechRecognition();
-            recognition.continuous = true;
-            recognition.interimResults = false;
-            recognition.lang = 'en-US';
-
-            recognition.onstart = () => {
-                console.log("Voice recognition started");
-                voiceIndicator.classList.add('listening');
-                voiceBtnText.innerText = "Voice Mode: ON";
-                voiceBtn.classList.add('active');
-            };
-
-            recognition.onerror = (event) => {
-                console.error("Voice recognition error", event.error);
-                if (event.error === 'not-allowed') {
-                    alert("Microphone access denied. Please allow microphone access.");
-                    state.voiceEnabledByUser = false;
-                }
-                voiceIndicator.classList.remove('listening');
-            };
-
-            recognition.onend = () => {
-                console.log("Voice recognition ended");
-                voiceIndicator.classList.remove('listening');
-                if (state.voiceEnabledByUser) {
-                    // Add a small delay before restarting to avoid rapid loops
-                    setTimeout(() => {
-                        try { recognition.start(); } catch(e) { console.warn("Restart failed", e); }
-                    }, 300);
-                } else {
-                    voiceBtnText.innerText = "Enable Voice Mode";
-                    voiceBtn.classList.remove('active');
-                }
-            };
-
-            recognition.onresult = (event) => {
-                if (!state.voiceEnabledByUser) return;
-
-                const last = event.results.length - 1;
-                const transcript = event.results[last][0].transcript.trim().toUpperCase();
-                
-                const words = transcript.split(' ');
-                const displayPhrase = words.slice(-3).join(' ');
-
-                if (displayPhrase.length > 0) {
-                    updateDynamicText(displayPhrase);
-                    state.targetGestureLabel = "Voice: " + displayPhrase;
-                    state.targetWeights = [0, 0, 0, 0, 1];
-                    state.spreadTarget = 0.0; 
-                }
-            };
-        } else {
-            voiceBtnText.innerText = "Voice Not Supported";
-            voiceBtn.disabled = true;
-        }
-
-        voiceBtn.addEventListener('click', () => {
-            if (!recognition) return;
-
-            state.voiceEnabledByUser = !state.voiceEnabledByUser;
-            
-            if (state.voiceEnabledByUser) {
-                try {
-                    recognition.start();
-                    state.voiceModeActive = true;
-                    state.targetGestureLabel = "Listening...";
-                    state.spreadTarget = 0.0; 
-                    state.targetWeights = [0, 0, 0, 0, 1]; 
-                    
-                    updateDynamicText("HELLO");
-                } catch(e) { console.warn(e); }
-            } else {
-                recognition.stop();
-                state.voiceModeActive = false;
-                state.targetGestureLabel = "Voice Mode OFF";
-                state.spreadTarget = 1.0;
-            }
-        });
-
-
-        /**
-         * HAND TRACKING & INTERACTION
-         */
-        const videoElement = document.getElementById('webcam-preview');
-        const uiGesture = document.getElementById('gesture-val');
-        const uiFingers = document.getElementById('finger-val');
-        const loading = document.getElementById('loading');
-
-        function onResults(results) {
-            loading.style.display = 'none';
-
-            let detectedGesture = 0; 
-            let fCount = 0;
-            let openness = 1.0;
-
-            state.handPositions = []; 
-
-            if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
-                state.isHandDetected = true;
-                
-                for (const landmarks of results.multiHandLandmarks) {
-                    const palmX = 1.0 - landmarks[9].x; 
-                    const palmY = landmarks[9].y;
-                    const hPos = new THREE.Vector3(
-                        (palmX - 0.5) * widthAtZero,
-                        -(palmY - 0.5) * heightAtZero,
-                        0
-                    );
-                    state.handPositions.push(hPos);
-                }
-
-                const landmarks = results.multiHandLandmarks[0];
-                const handedness = results.multiHandedness[0].label;
-                
-                const wrist = landmarks[0];
-                state.handPositionRaw.x = 1.0 - wrist.x; 
-                state.handPositionRaw.y = wrist.y;
-
-                fCount = countFingers(landmarks, handedness);
-                openness = getHandOpenness(landmarks);
-
-                if (state.voiceEnabledByUser) {
-                    state.targetWeights = [0, 0, 0, 0, 1];
-                    state.spreadTarget = 0.0; 
-                    state.galaxyEffectActive = false; 
-                } else {
-                    if (fCount === 1) detectedGesture = 1;
-                    else if (fCount === 2) detectedGesture = 2;
-                    else if (fCount === 3) detectedGesture = 3;
-                    else if (fCount === 4) detectedGesture = 4;
-
-                    if (detectedGesture > 0) {
-                        state.targetGestureLabel = getLabel(detectedGesture);
-                        state.spreadTarget = 0.0;
-                        state.targetWeights = getWeights(detectedGesture);
-                        state.galaxyEffectActive = (detectedGesture === 4);
-                    } else {
-                        state.targetGestureLabel = fCount === 0 ? "Fist (Contract)" : "Scatter (Expand)";
-                        state.spreadTarget = 1.0;
-                        state.galaxyEffectActive = false;
-                        const minScale = 0.1;
-                        const maxScale = 1.5;
-                        state.scatterScaleTarget = minScale + openness * (maxScale - minScale);
-                    }
-                }
-
-                state.fingerCount = fCount;
-
-            } else {
-                state.isHandDetected = false;
-
-                if (state.voiceEnabledByUser) {
-                    state.spreadTarget = 0.0;
-                    state.targetWeights = [0, 0, 0, 0, 1];
-                    state.handPositionRaw.x = 0.5;
-                    state.handPositionRaw.y = 0.5;
-                } else {
-                    state.spreadTarget = 1.0;
-                    state.targetGestureLabel = "Waiting...";
-                    state.scatterScaleTarget = 1.0;
-                    state.handPositionRaw.x = 0.5;
-                    state.handPositionRaw.y = 0.5;
-                }
-                
-                state.fingerCount = 0;
-                state.galaxyEffectActive = false;
-            }
-
-            updateUI();
-        }
-
-        function getLabel(g) {
-            if(g===1) return CONFIG.text1;
-            if(g===2) return CONFIG.text2;
-            if(g===3) return CONFIG.text3;
-            if(g===4) return "I LOVE YOU";
-            return "";
-        }
-
-        function getWeights(g) {
-            if(g===1) return [1,0,0,0,0];
-            if(g===2) return [0,1,0,0,0];
-            if(g===3) return [0,0,1,0,0];
-            if(g===4) return [0,0,0,1,0];
-            return state.targetWeights; 
-        }
-
-        function getHandOpenness(landmarks) {
-            const wrist = landmarks[0];
-            const tips = [8, 12, 16, 20];
-            const mcps = [5, 9, 13, 17];
-            let distTips = 0, distMcps = 0;
-            for(let i=0; i<4; i++){
-                distTips += Math.hypot(landmarks[tips[i]].x - wrist.x, landmarks[tips[i]].y - wrist.y);
-                distMcps += Math.hypot(landmarks[mcps[i]].x - wrist.x, landmarks[mcps[i]].y - wrist.y);
-            }
-            const ratio = distTips / distMcps;
-            return Math.max(0, Math.min(1, (ratio - 1.0) / 1.2));
-        }
-
-        function countFingers(landmarks, handedness) {
-            let count = 0;
-            const fingerTips = [8, 12, 16, 20];
-            const fingerPips = [6, 10, 14, 18];
-            for (let i = 0; i < 4; i++) {
-                if (landmarks[fingerTips[i]].y < landmarks[fingerPips[i]].y) count++;
-            }
-            const thumbTip = landmarks[4];
-            const thumbIp = landmarks[3];
-            const isRightHand = handedness === 'Right';
-            if (isRightHand) {
-                if (thumbTip.x < thumbIp.x) count++;
-            } else {
-                if (thumbTip.x > thumbIp.x) count++;
-            }
-            return count;
-        }
-
-        function updateUI() {
-            uiGesture.innerText = state.targetGestureLabel;
-            uiFingers.innerText = state.fingerCount;
-        }
-
-        const hands = new Hands({locateFile: (file) => {
-            return `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`;
-        }});
-
-        hands.setOptions({
-            maxNumHands: 2, 
-            modelComplexity: 1,
-            minDetectionConfidence: 0.5,
-            minTrackingConfidence: 0.5
-        });
-
-        hands.onResults(onResults);
-
-        const cameraFeed = new Camera(videoElement, {
-            onFrame: async () => {
-                await hands.send({image: videoElement});
-            },
-            width: 1280,
-            height: 720
-        });
-        
-        async function startCamera() {
-            try {
-                loading.innerHTML = "Requesting Camera Access...";
-                // Check if browser supports getUserMedia
-                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-                    throw new Error("Browser API 'navigator.mediaDevices.getUserMedia' not available");
-                }
-
-                // Explicitly request permission first to debug
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-                // Stop the stream immediately, we just wanted to check permission/availability
-                stream.getTracks().forEach(track => track.stop());
-                
-                loading.innerHTML = "Starting MediaPipe Camera...";
-                await cameraFeed.start();
-            } catch (err) {
-                console.error("Camera Error:", err);
-                loading.innerHTML = `Camera not found (${err.name}).<br>Switching to <b>Mouse Interaction Mode</b>.`;
-                setTimeout(() => {
-                    loading.style.display = 'none';
-                    activateMouseMode();
-                }, 2500);
-            }
-        }
-
-        let isMouseMode = false;
-        function activateMouseMode() {
-            isMouseMode = true;
-            state.isHandDetected = true; // Always "detect" hand in mouse mode
-            
-            // Keep camera wrapper visible but indicate no signal
-            const camWrapper = document.getElementById('camera-wrapper');
-            camWrapper.style.display = 'flex'; // Ensure it's visible
-            camWrapper.style.justifyContent = 'center';
-            camWrapper.style.alignItems = 'center';
-            camWrapper.style.background = 'rgba(20, 20, 20, 0.8)';
-            camWrapper.style.border = '1px solid #444';
-            
-            const video = document.getElementById('webcam-preview');
-            video.style.opacity = '0.1'; // Dim the broken video element
-            
-            // Add a placeholder text if not exists
-            if (!document.getElementById('no-cam-msg')) {
-                const msg = document.createElement('div');
-                msg.id = 'no-cam-msg';
-                msg.innerHTML = "NO CAMERA<br>Mouse Mode";
-                msg.style.color = '#aaa';
-                msg.style.textAlign = 'center';
-                msg.style.fontSize = '12px';
-                msg.style.position = 'absolute';
-                camWrapper.appendChild(msg);
-            }
-            
-            // Add mouse listener for interaction
-            window.addEventListener('mousemove', (event) => {
-                // Map mouse to 3D world coordinates on z=0 plane
-                const vec = new THREE.Vector3();
-                const pos = new THREE.Vector3();
-                
-                vec.set(
-                    (event.clientX / window.innerWidth) * 2 - 1,
-                    -(event.clientY / window.innerHeight) * 2 + 1,
-                    0.5
-                );
-                
-                vec.unproject(camera);
-                vec.sub(camera.position).normalize();
-                
-                const distance = -camera.position.z / vec.z;
-                pos.copy(camera.position).add(vec.multiplyScalar(distance));
-                
-                state.handPositions = [pos];
-                
-                // Map mouse X to rotation
-                state.handPositionRaw.x = event.clientX / window.innerWidth;
-                state.handPositionRaw.y = event.clientY / window.innerHeight;
             });
 
-            // Add click listener to cycle gestures
-            let gestureIndex = 0;
-            window.addEventListener('click', () => {
-                if (state.voiceModeActive) return;
-                
-                gestureIndex = (gestureIndex + 1) % 5; // 0 to 4
-                const g = gestureIndex;
-                
-                if (g === 0) {
-                    state.targetGestureLabel = "Mouse Click: Scatter";
-                    state.spreadTarget = 1.0;
-                    state.galaxyEffectActive = false;
-                } else {
-                    state.targetGestureLabel = "Mouse Click: " + getLabel(g);
-                    state.spreadTarget = 0.0;
-                    state.targetWeights = getWeights(g);
-                    state.galaxyEffectActive = (g === 4);
-                }
-                updateUI();
-            });
-            
-            // Update UI instructions
-            const uiContent = document.getElementById('ui-content');
-            const helpText = uiContent.querySelector('div[style*="font-size: 11px"]');
-            if(helpText) {
-                helpText.innerHTML = `
-                    <b>Mouse Mode Active:</b><br>
-                    🖱️ Move mouse to interact<br>
-                    🖱️ Click to cycle gestures<br>
-                    (I -> LOVE -> YOU -> ...)<br>
-                    <br>
-                    <b>Voice Mode:</b><br>
-                    🎤 Still works if Mic is available
-                `;
+            // Shuffle danh sách ảnh
+            for (let i = imagesToPlace.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [imagesToPlace[i], imagesToPlace[j]] = [imagesToPlace[j], imagesToPlace[i]];
             }
-        }
 
-        startCamera();
+            // Đặt từng ảnh vào vị trí phù hợp
+            imagesToPlace.forEach(({ img, originalIndex }) => {
+                let bestPosition = -1;
+                let maxMinDistance = -1;
 
-        /**
-         * ANIMATION
-         */
-        function animate() {
-            requestAnimationFrame(animate);
+                // Tìm vị trí tốt nhất (cách xa nhất các ảnh cùng loại đã đặt)
+                for (let pos = 0; pos < targetCount; pos++) {
+                    if (result[pos] !== null) continue; // Vị trí đã được đặt
 
-            // Handle AR Mode Transition
-            if (state.voiceModeActive !== state.wasVoiceModeActive) {
-                if (state.voiceModeActive) {
-                    camWrapper.classList.add('fullscreen');
-                    // Only make background transparent if camera is actually working/visible
-                    if (!isMouseMode) {
-                        scene.background = null; 
-                    } else {
-                        scene.background = new THREE.Color(0x050505);
+                    // Tính khoảng cách tối thiểu đến các ảnh cùng loại đã đặt
+                    let minDist = Infinity;
+                    for (let i = 0; i < targetCount; i++) {
+                        if (result[i] === img) {
+                            const dist = Math.min(
+                                Math.abs(i - pos),
+                                Math.abs(i - pos + targetCount),
+                                Math.abs(i - pos - targetCount)
+                            );
+                            minDist = Math.min(minDist, dist);
+                        }
                     }
-                    
-                    // Reset position when entering fullscreen to ensure it covers everything
-                    camWrapper.style.top = '';
-                    camWrapper.style.left = '';
-                    camWrapper.style.bottom = '';
-                    camWrapper.style.right = '';
-                } else {
-                    camWrapper.classList.remove('fullscreen');
-                    scene.background = new THREE.Color(0x050505);
-                    // Reset to default corner position or keep last dragged position? 
-                    // Let's reset for safety or keep it if dragged. 
-                    // Since we modified inline styles during drag, they persist.
-                    if (!camWrapper.style.top) {
-                        camWrapper.style.bottom = '15px';
-                        camWrapper.style.right = '15px';
+
+                    // Nếu chưa có ảnh cùng loại nào, khoảng cách là vô cùng
+                    if (minDist === Infinity) minDist = targetCount;
+
+                    // Ưu tiên vị trí có khoảng cách lớn nhất và >= minDistance
+                    if (minDist >= minDistance && minDist > maxMinDistance) {
+                        maxMinDistance = minDist;
+                        bestPosition = pos;
                     }
                 }
-                state.wasVoiceModeActive = state.voiceModeActive;
-            }
 
-            // Interpolators
-            state.currentSpread += (state.spreadTarget - state.currentSpread) * 0.08;
-            state.currentScatterScale += (state.scatterScaleTarget - state.currentScatterScale) * 0.1;
-            
-            for(let i=0; i<5; i++) { 
-                state.currentWeights[i] += (state.targetWeights[i] - state.currentWeights[i]) * 0.1;
-            }
+                // Nếu không tìm được vị trí lý tưởng, tìm vị trí có khoảng cách lớn nhất
+                if (bestPosition === -1) {
+                    for (let pos = 0; pos < targetCount; pos++) {
+                        if (result[pos] !== null) continue;
 
-            // Hand Rotation 
-            const targetRotY = (state.handPositionRaw.x - 0.5) * 1.5; 
-            const targetRotX = (state.handPositionRaw.y - 0.5) * 1.5;
-            particleSystem.rotation.y += (targetRotY - particleSystem.rotation.y) * 0.1;
-            particleSystem.rotation.x += (targetRotX - particleSystem.rotation.x) * 0.1;
-            
-            // Rotate Galaxy (independent)
-            galaxySystem.rotation.y += 0.002;
-            galaxySystem.rotation.x += 0.001;
+                        let minDist = Infinity;
+                        for (let i = 0; i < targetCount; i++) {
+                            if (result[i] === img) {
+                                const dist = Math.min(
+                                    Math.abs(i - pos),
+                                    Math.abs(i - pos + targetCount),
+                                    Math.abs(i - pos - targetCount)
+                                );
+                                minDist = Math.min(minDist, dist);
+                            }
+                        }
+                        if (minDist === Infinity) minDist = targetCount;
 
-            const positionsArray = particleGeometry.attributes.position.array;
-            const colorsArray = particleGeometry.attributes.color.array;
-
-            const time = Date.now() * 0.001;
-            
-            const w1 = state.currentWeights[0]; 
-            const w2 = state.currentWeights[1]; 
-            const w3 = state.currentWeights[2]; 
-            const w4 = state.currentWeights[3]; 
-            const w5 = state.currentWeights[4]; 
-
-            const interactionRadSq = CONFIG.interactionRadius * CONFIG.interactionRadius;
-            
-            for (let i = 0; i < CONFIG.particleCount; i++) {
-                // 1. Calculate Target
-                const p1 = posText1[i];
-                const p2 = posText2[i];
-                const p3 = posText3[i];
-                const p4 = posText4[i];
-                const p5 = posText5[i]; // Dynamic Text
-
-                const tx = p1.x*w1 + p2.x*w2 + p3.x*w3 + p4.x*w4 + p5.x*w5;
-                const ty = p1.y*w1 + p2.y*w2 + p3.y*w3 + p4.y*w4 + p5.y*w5;
-                const tz = p1.z*w1 + p2.z*w2 + p3.z*w3 + p4.z*w4 + p5.z*w5;
-
-                // 2. Scatter
-                const s = posScatter[i];
-                const sX = s.x * state.currentScatterScale;
-                const sY = s.y * state.currentScatterScale;
-                const sZ = s.z * state.currentScatterScale;
-                
-                const noiseScale = 0.5 * state.currentScatterScale;
-                const nX = Math.sin(time + i*0.1) * noiseScale;
-                const nY = Math.cos(time + i*0.13) * noiseScale;
-
-                // 3. Blend
-                let finalX = THREE.MathUtils.lerp(tx, sX + nX, state.currentSpread);
-                let finalY = THREE.MathUtils.lerp(ty, sY + nY, state.currentSpread);
-                let finalZ = THREE.MathUtils.lerp(tz, sZ, state.currentSpread);
-
-                // 4. Physics Interaction (Multi-Hand)
-                if (state.voiceModeActive && state.handPositions.length > 0) {
-                    for (const hPos of state.handPositions) {
-                        const dx = finalX - hPos.x;
-                        const dy = finalY - hPos.y;
-                        const dz = finalZ - hPos.z;
-                        const distSq = dx*dx + dy*dy + dz*dz;
-
-                        if (distSq < interactionRadSq) {
-                            const dist = Math.sqrt(distSq);
-                            const force = (CONFIG.interactionRadius - dist) / CONFIG.interactionRadius; 
-                            
-                            // Stronger repulsion logic
-                            const repulsion = Math.pow(force, 2) * CONFIG.repulsionStrength; 
-
-                            finalX += (dx / dist) * repulsion * 5; 
-                            finalY += (dy / dist) * repulsion * 5;
-                            finalZ += (dz / dist) * repulsion * 5;
+                        if (minDist > maxMinDistance) {
+                            maxMinDistance = minDist;
+                            bestPosition = pos;
                         }
                     }
                 }
 
-                // Update Position
-                const cx = positionsArray[i*3];
-                const cy = positionsArray[i*3+1];
-                const cz = positionsArray[i*3+2];
-                const speed = 0.1;
-                positionsArray[i*3]   += (finalX - cx) * speed;
-                positionsArray[i*3+1] += (finalY - cy) * speed;
-                positionsArray[i*3+2] += (finalZ - cz) * speed;
-
-                // 5. Colors (UNIFIED & NEW AR COLOR)
-                const baseColor = new THREE.Color();
-                const cPink1 = new THREE.Color(0xff69b4); // HotPink
-                const cPurple = new THREE.Color(0xda70d6); // Orchid
-                const cBlueNeon = new THREE.Color(0x00ffff); // Cyan for AR
-                const cWhite = new THREE.Color(0xffffff);
-
-                if (state.currentSpread > 0.8) {
-                    // Scatter Color
-                    const dist = Math.sqrt(finalX*finalX + finalY*finalY + finalZ*finalZ);
-                    const normDist = Math.min(dist / 40, 1);
-                    baseColor.setHSL(0.9, 0.5, 0.8 + normDist*0.2);
-                } else {
-                    if (w5 > 0.5) {
-                        // AR / Voice Mode -> BLUE NEON / High Contrast
-                        baseColor.copy(cBlueNeon);
-                        // Make it brighter/more contrasty
-                        baseColor.offsetHSL(0, 0, 0.1); 
-                        // Sparkle
-                        if (Math.random() > 0.92) baseColor.setHex(0xffffff);
-                    } else if (w1>0.5 || w2>0.5 || w3>0.5 || w4>0.5) {
-                        // All gestures now use the Unified Pink/Purple scheme (Love Theme)
-                        baseColor.lerpColors(cPink1, cPurple, 0.5);
-                        const hueOffset = (finalX / 60) * 0.1;
-                        baseColor.offsetHSL(hueOffset, 0, 0);
-                    } else {
-                        baseColor.setHex(0xffffff);
-                    }
+                // Nếu vẫn không tìm được, đặt vào vị trí đầu tiên còn trống
+                if (bestPosition === -1) {
+                    bestPosition = result.findIndex(x => x === null);
                 }
 
-                colorsArray[i*3] = baseColor.r;
-                colorsArray[i*3+1] = baseColor.g;
-                colorsArray[i*3+2] = baseColor.b;
-            }
+                if (bestPosition !== -1) {
+                    result[bestPosition] = img;
+                }
+            });
 
-            particleGeometry.attributes.position.needsUpdate = true;
-            particleGeometry.attributes.color.needsUpdate = true;
-
-            // Galaxy Animation (Opacity matches Gesture 4)
-            galaxyMaterial.opacity = THREE.MathUtils.lerp(galaxyMaterial.opacity, state.galaxyEffectActive ? 0.8 : 0.0, 0.03);
-
-            controls.update();
-            renderer.render(scene, camera);
+            return result;
         }
 
-        animate();
+        const zFactor = isMobile ? 1.4 : 1.0;
+        const SCENE_CONFIG = {
+            scaleFar: isMobile ? 8.0 : 10.00,
+            posFar: { x: 0.0, y: isMobile ? -0.2 : -0.6 },
+            camZFar: 7.7 * zFactor,
+            scaleNear: 10.00,
+            posNear: { x: 0.0, y: -0.7 },
+            camZNear: 2.5,
+            zoomSpeed: 0.1,
+            rotateSpeed: 0.08
+        };
 
+        const LAYERS = [
+            { id: 'inner_snow', shape: 'Snowflake', count: Math.floor(1200 * PARTICLE_RATIO), opacity: 0.9, color: '#ffffff', speed: 0.0005, size: 0.06, radius: 0.48, startY: 1.1, endY: -0.3, drift: 0.01, twinkle: false, rotateWithJar: true },
+            { id: 'snow_main', shape: 'Snowflake', count: Math.floor(500 * PARTICLE_RATIO), opacity: 0.9, color: '#e0ffff', speed: 0.0010, size: 0.18, radius: 5.0, startY: 7.0, endY: -6.0, drift: 0.05, twinkle: true, rotateWithJar: true },
+            { id: 'gold_dust', shape: 'Circle', count: Math.floor(500 * PARTICLE_RATIO), opacity: 0.8, color: '#ffcc00', speed: 0.0006, size: 0.03, radius: 4.5, startY: 6.0, endY: -4.0, drift: 0.08, twinkle: true, rotateWithJar: true }
+        ];
+
+        let scene, camera, renderer, composer, bloomPass, mixer, particleSystems = {}, textureCache = {}, polaroidTextures = [], polaroidGroup, clock = new THREE.Clock(), bgParticleGroup;
+        let isGalleryMode = true, lastGesture = 'NONE', isZoomedIn = false, lastSwitchTime = 0, lastDropTime = 0, jarOffsetY = 0, inspectedPhoto = null;
+        let carModel; // Keep variable but won't load it
+        let viewedPhotos = new Set(); // Track viewed photos
+        let autoCloseTimer = null; // Timer for auto-closing photos
+        let currentMessageEl = null; // Element hiển thị lời chúc
+        const SWITCH_COOLDOWN = 1.0;
+
+        const STATE = {
+            hand: { detected: false, x: 0.5, y: 0.5, gesture: 'NONE' },
+            targetRotation: { x: 0, y: 0 },
+            currentRotation: { x: 0, y: 0 }
+        };
+
+        let isFireworkMode = false;
+
+        let touchStartX = 0, touchStartY = 0;
+        let isTouching = false;
+        let touchLastTap = 0;
+
+        const FW_CONFIG = { particleCount: isMobile ? 60 : 500, explosionRadius: 25, friction: 0.98, gravity: 0.04, focalLength: 800, autoFireRate: isMobile ? 120 : 100 };
+        let fwCanvas, fwCtx, fwWidth, fwHeight, fwCx, fwCy;
+        let fwParticles = [];
+        let fwFireworks = [];
+
+        function initFireworkCanvas() {
+            fwCanvas = document.getElementById('firework-canvas'); fwCtx = fwCanvas.getContext('2d');
+            resizeFw(); window.addEventListener('resize', resizeFw);
+        }
+        function resizeFw() {
+            fwWidth = window.innerWidth; fwHeight = window.innerHeight;
+            fwCanvas.width = fwWidth; fwCanvas.height = fwHeight;
+            fwCx = fwWidth / 2; fwCy = fwHeight / 2;
+        }
+        const fwRandom = (min, max) => Math.random() * (max - min) + min;
+
+        class Particle3D {
+            constructor(x, y, z, color) {
+                this.x = x; this.y = y; this.z = z; this.color = color; this.size = fwRandom(1, 3);
+                const theta = Math.random() * Math.PI * 2; const phi = Math.acos((Math.random() * 2) - 1);
+                const speed = fwRandom(5, FW_CONFIG.explosionRadius);
+                this.vx = speed * Math.sin(phi) * Math.cos(theta);
+                this.vy = speed * Math.sin(phi) * Math.sin(theta);
+                this.vz = speed * Math.cos(phi);
+                this.alpha = 1; this.decay = fwRandom(0.015, 0.03);
+                this.last2Dx = 0; this.last2Dy = 0; this.hasMoved = false;
+            }
+            update() {
+                this.vx *= FW_CONFIG.friction; this.vy *= FW_CONFIG.friction; this.vz *= FW_CONFIG.friction;
+                this.vy += FW_CONFIG.gravity;
+                this.x += this.vx; this.y += this.vy; this.z += this.vz;
+                this.alpha -= this.decay;
+            }
+            draw() {
+                if (this.alpha <= 0.1) return;
+                const scale = FW_CONFIG.focalLength / (FW_CONFIG.focalLength + this.z);
+                const screenX = fwCx + this.x * scale; const screenY = fwCy + this.y * scale;
+                if (scale < 0) return;
+                const currentSize = this.size * scale;
+                if (this.hasMoved) {
+                    fwCtx.beginPath(); fwCtx.strokeStyle = this.color; fwCtx.lineWidth = currentSize; fwCtx.globalAlpha = this.alpha * 0.7;
+                    fwCtx.moveTo(this.last2Dx, this.last2Dy); fwCtx.lineTo(screenX, screenY); fwCtx.stroke();
+                }
+                this.last2Dx = screenX; this.last2Dy = screenY; this.hasMoved = true;
+            }
+        }
+
+        class FireworkSeed {
+            constructor() {
+                this.x = fwRandom(fwWidth * 0.3, fwWidth * 0.7); this.y = fwHeight;
+                this.targetY = fwRandom(fwHeight * 0.15, fwHeight * 0.35);
+                this.speed = fwRandom(8, 12); this.angle = -Math.PI / 2;
+                this.vx = Math.cos(this.angle) * this.speed; this.vy = Math.sin(this.angle) * this.speed;
+                this.exploded = false;
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy; this.vy += 0.1;
+                if (this.vy >= 0 || this.y <= this.targetY) { this.exploded = true; this.explode(); }
+            }
+            draw() {
+                fwCtx.globalAlpha = 1; fwCtx.strokeStyle = '#FFD700'; fwCtx.lineWidth = 2;
+                fwCtx.beginPath(); fwCtx.moveTo(this.x, this.y); fwCtx.lineTo(this.x, this.y + 10); fwCtx.stroke();
+            }
+            explode() {
+                const originX = this.x - fwCx; const originY = this.y - fwCy; const originZ = fwRandom(-100, 100);
+                // Random hue for colorful fireworks (0-360)
+                const hueBase = fwRandom(0, 360);
+                for (let i = 0; i < FW_CONFIG.particleCount; i++) {
+                    const lightness = fwRandom(50, 80); const color = `hsl(${hueBase}, 100%, ${lightness}%)`;
+                    fwParticles.push(new Particle3D(originX, originY, originZ, color));
+                }
+            }
+        }
+
+        function loopFireworks() {
+            if (!isFireworkMode || !NOEL_DATA.firework) return;
+            fwCtx.globalCompositeOperation = 'source-over';
+            fwCtx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            fwCtx.fillRect(0, 0, fwWidth, fwHeight);
+            fwCtx.globalCompositeOperation = 'lighter';
+
+            if (Math.random() * FW_CONFIG.autoFireRate < 2) fwFireworks.push(new FireworkSeed());
+
+            for (let i = fwFireworks.length - 1; i >= 0; i--) {
+                fwFireworks[i].update(); fwFireworks[i].draw();
+                if (fwFireworks[i].exploded) fwFireworks.splice(i, 1);
+            }
+            for (let i = fwParticles.length - 1; i >= 0; i--) {
+                fwParticles[i].update(); fwParticles[i].draw();
+                if (fwParticles[i].alpha <= 0) fwParticles.splice(i, 1);
+            }
+            requestAnimationFrame(loopFireworks);
+        }
+
+        function triggerFireworkMode() {
+            if (isFireworkMode) return;
+            isFireworkMode = true;
+
+            const tl = gsap.timeline();
+            // Chỉ hiển thị firework canvas nếu firework = true
+            if (NOEL_DATA.firework) {
+                document.getElementById('firework-canvas').style.display = 'block';
+            }
+            tl.to('#black-void', { opacity: 1, duration: 1.5 });
+            tl.to('#ui-layer', { opacity: 0, duration: 0.5 }, 0);
+            tl.to('#lyrics-container', { opacity: 0, duration: 0.5 }, 0);
+            // Hiển thị secret message trước
+            tl.to('#secret-message', { opacity: 1, duration: 2, scale: 1.1, ease: "power2.out" }, 0.5);
+            // Sau đó hiển thị ending section với lời chúc
+            tl.to('#ending-section', { opacity: 1, duration: 2, ease: "power2.out" }, 1.5);
+
+            if (polaroidGroup) {
+                polaroidGroup.children.forEach(p => {
+                    tl.to(p.position, { x: 0, y: 0, z: 0, duration: 1, ease: "back.in(1.7)" }, 0);
+                    tl.to(p.scale, { x: 0, y: 0, z: 0, duration: 1, ease: "back.in(1.7)" }, 0);
+                });
+            }
+            if (carModel) tl.to(carModel.scale, { x: 0, y: 0, z: 0, duration: 1, ease: "back.in(1.7)" }, 0);
+
+            // Chỉ chạy animation pháo hoa nếu firework = true
+            if (NOEL_DATA.firework) {
+                setTimeout(() => { loopFireworks(); }, 800);
+            }
+        }
+
+        function exitFireworkMode() {
+            if (!isFireworkMode) return;
+            isFireworkMode = false;
+            const tl = gsap.timeline();
+            tl.to('#secret-message', { opacity: 0, duration: 0.5, scale: 1 }, 0);
+            tl.to('#ending-section', { opacity: 0, duration: 0.5 }, 0);
+            tl.to('#black-void', { opacity: 0, duration: 1 });
+            tl.to('#ui-layer', { opacity: 1, duration: 1 }, 0);
+
+            fwCtx.clearRect(0, 0, fwWidth, fwHeight);
+            fwParticles = []; fwFireworks = [];
+            document.getElementById('firework-canvas').style.display = 'none';
+
+            if (carModel) tl.to(carModel.scale, { x: SCENE_CONFIG.scaleFar, y: SCENE_CONFIG.scaleFar, z: SCENE_CONFIG.scaleFar, duration: 1.5, ease: "elastic.out(1, 0.5)" }, 0.5);
+
+            if (polaroidGroup) {
+                polaroidGroup.children.forEach(p => {
+                    p.position.copy(p.userData.startPos); p.scale.set(1, 1, 1); p.material.opacity = 0;
+                });
+            }
+            isGalleryMode = false;
+            document.getElementById('mode-indicator').innerText = "MODE: JAR CONTROL";
+            document.getElementById('mode-indicator').style.color = "rgba(255, 215, 0, 0.7)";
+            gsap.to(camera.position, { z: SCENE_CONFIG.camZFar, duration: 1.5 });
+            gsap.to(window, { duration: 1.2, jarOffsetY: 0 });
+        }
+
+        async function init() {
+            // Load dữ liệu từ API trước khi khởi tạo
+            await loadNoelData();
+
+            // Cập nhật LYRICS_DATA sau khi load
+            LYRICS_DATA = NOEL_DATA.LYRICS_DATA;
+
+            // Nếu có ảnh từ API và có đúng 10 ảnh, sẽ random thành 20 ảnh
+            // TOTAL_PHOTOS luôn là 20 (hoặc 8 trên mobile) để render
+
+            // Cập nhật UI
+            const mainTitleEl = document.getElementById('main-title');
+            const secretMessageEl = document.getElementById('secret-message');
+            const bgMusicEl = document.getElementById('bg-music');
+            const startNoteEl = document.querySelector('.start-note');
+
+            if (mainTitleEl) mainTitleEl.textContent = NOEL_DATA.mainTitle;
+            if (secretMessageEl) secretMessageEl.textContent = NOEL_DATA.secretMessage;
+            if (startNoteEl && NOEL_DATA.songName) {
+                startNoteEl.textContent = `♫ ${NOEL_DATA.songName}`;
+            }
+            if (bgMusicEl && NOEL_DATA.song) {
+                bgMusicEl.src = NOEL_DATA.song.startsWith('http') ? NOEL_DATA.song : `./${NOEL_DATA.song}`;
+            } else if (bgMusicEl) {
+                bgMusicEl.src = './audio.MP3';
+            }
+
+            const overlay = document.getElementById('start-overlay');
+            const audio = document.getElementById('bg-music');
+            const startBtn = document.querySelector('.start-btn');
+
+            startBtn.addEventListener('click', async () => {
+                overlay.style.opacity = 0;
+                setTimeout(() => overlay.remove(), 500);
+                initTouchControls();
+                // Set audio source từ dữ liệu đã load
+                if (NOEL_DATA.song) {
+                    audio.src = NOEL_DATA.song.startsWith('http') ? NOEL_DATA.song : `./${NOEL_DATA.song}`;
+                } else {
+                    audio.src = './audio.mp3';
+                }
+                audio.play().catch(e => { console.log("Audio Error:", e); });
+            });
+
+            const container = document.getElementById('canvas-container');
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 0, SCENE_CONFIG.camZFar);
+
+            renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.0));
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 0.8;
+
+            container.appendChild(renderer.domElement);
+
+            if (ENABLE_POST_PROCESSING) {
+                const renderScene = new RenderPass(scene, camera);
+                composer = new EffectComposer(renderer);
+                composer.addPass(renderScene);
+
+                const bloomRes = new THREE.Vector2(window.innerWidth / 2, window.innerHeight / 2);
+                bloomPass = new UnrealBloomPass(bloomRes, 1.5, 0.4, 0.85);
+                // Tăng threshold lên 1.2 để ảnh không bị bloom (chỉ particles sáng mới glow)
+                bloomPass.threshold = 1.2; bloomPass.strength = 0.4; bloomPass.radius = 0.3;
+                composer.addPass(bloomPass);
+            }
+
+            const pmremGenerator = new THREE.PMREMGenerator(renderer);
+            scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
+
+            const dirLight = new THREE.DirectionalLight(0xffeebb, 1.2);
+            dirLight.position.set(5, 10, 7);
+            scene.add(dirLight);
+            const redLight = new THREE.PointLight(0xff0000, 0.5, 20); redLight.position.set(-5, 2, 0); scene.add(redLight);
+            scene.add(new THREE.AmbientLight(0x404040, 1.0));
+
+            loadTextures(); setupBackgroundParticles();
+            // Chỉ load và tạo polaroid nếu có ảnh
+            if (NOEL_DATA.images.length > 0) {
+                loadPolaroidTextures();
+                createPolaroids();
+            }
+            LAYERS.forEach(createLayerSystem);
+
+            // Removed Car Model Loading per user request to focus on Gallery
+            /*
+            new GLTFLoader().load('https://soncuc.love/car.glb', (gltf) => {
+                carModel = gltf.scene; carModel.scale.setScalar(SCENE_CONFIG.scaleFar);
+                carModel.position.set(SCENE_CONFIG.posFar.x, SCENE_CONFIG.posFar.y, 0);
+                carModel.position.z = -0.5; carModel.rotation.set(0,0,0);
+                if (gltf.animations.length) { mixer = new THREE.AnimationMixer(carModel); mixer.clipAction(gltf.animations[0]).play(); }
+                scene.add(carModel);
+            });
+            */
+            // Create a center point reference if needed, or just rotate group around 0,0,0
+
+            initFireworkCanvas();
+            initHandTracking();
+
+            // Force Gallery Mode UI với số đếm ảnh
+            const indicator = document.getElementById('mode-indicator');
+            if (indicator) {
+                indicator.innerText = `MỞ TAY ĐỂ XEM ẢNH (0/${TOTAL_PHOTOS})`;
+                indicator.style.color = "#FFD700";
+            }
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                if (composer) composer.setSize(window.innerWidth, window.innerHeight);
+                resizeFw();
+            });
+            animate();
+        }
+
+        function initTouchControls() {
+            const el = document.getElementById('canvas-container');
+
+            el.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; isTouching = true;
+                }
+            }, { passive: false });
+
+            el.addEventListener('touchmove', (e) => {
+                if (!isTouching || isFireworkMode) return;
+                e.preventDefault();
+                if (e.touches.length === 1) {
+                    const x = e.touches[0].clientX; const y = e.touches[0].clientY;
+                    const dx = (x - touchStartX) * 0.005; const dy = (y - touchStartY) * 0.005;
+
+                    if (!isGalleryMode) {
+                        STATE.targetRotation.x += dy; STATE.targetRotation.y += dx;
+                        STATE.currentRotation.x = STATE.targetRotation.x; STATE.currentRotation.y = STATE.targetRotation.y;
+                        if (carModel) { carModel.rotation.y = STATE.currentRotation.y; carModel.rotation.x = STATE.currentRotation.x; }
+                    }
+                    touchStartX = x; touchStartY = y;
+                }
+            }, { passive: false });
+
+            el.addEventListener('touchend', (e) => {
+                isTouching = false;
+                const now = Date.now();
+                if (now - touchLastTap < 300) toggleMode();
+                touchLastTap = now;
+            });
+
+            let longPressTimer;
+            el.addEventListener('touchstart', () => {
+                longPressTimer = setTimeout(() => {
+                    // Cho phép trigger firework mode ngay cả khi không có ảnh
+                    triggerFireworkMode();
+                }, 1500);
+            });
+            el.addEventListener('touchend', () => clearTimeout(longPressTimer));
+        }
+
+        // Hàm hỗ trợ xuống dòng text trên Canvas
+        function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+            const words = text.split(' ');
+            let line = '';
+            const lines = [];
+
+            for (let n = 0; n < words.length; n++) {
+                const testLine = line + words[n] + ' ';
+                const metrics = ctx.measureText(testLine);
+                const testWidth = metrics.width;
+                if (testWidth > maxWidth && n > 0) {
+                    lines.push(line);
+                    line = words[n] + ' ';
+                } else {
+                    line = testLine;
+                }
+            }
+            lines.push(line);
+
+            // Vẽ từng dòng
+            // Căn chỉnh y để block text nằm giữa khoảng trống bottom
+            // y truyền vào là dòng đầu tiên.
+            for (let k = 0; k < lines.length; k++) {
+                ctx.fillText(lines[k], x, y + (k * lineHeight));
+            }
+        }
+
+        function loadPolaroidTextures() {
+            // Load 36 ảnh cố định từ NOEL_DATA.images
+            if (!NOEL_DATA.images || NOEL_DATA.images.length === 0) {
+                console.log('ℹ️ Không có ảnh, bỏ qua load polaroid textures');
+                return;
+            }
+
+            const imgLoader = new THREE.ImageLoader();
+            imgLoader.crossOrigin = 'anonymous';
+
+            NOEL_DATA.images.forEach((imageUrl, index) => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 512;
+                canvas.height = 650; // Tăng chiều cao xíu để có chỗ cho text nhiều dòng
+                const ctx = canvas.getContext('2d');
+
+                // Background
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, 512, 650);
+                // Placeholder ảnh
+                ctx.fillStyle = '#e0e0e0';
+                ctx.fillRect(20, 20, 472, 472);
+
+                const texture = new THREE.CanvasTexture(canvas);
+                texture.colorSpace = THREE.SRGBColorSpace;
+                polaroidTextures.push(texture);
+
+                imgLoader.load(imageUrl, (image) => {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, 512, 650);
+                    ctx.drawImage(image, 20, 20, 472, 472);
+
+                    // Lấy lời chúc
+                    const messageData = PHOTO_MESSAGES.find(m => m.id === index + 1);
+                    const messageText = messageData ? messageData.message : `Moment ${index + 1}`;
+
+                    // Config font - Be Vietnam Pro cho tiếng Việt
+                    ctx.fillStyle = '#000';
+                    // Tự động giảm size nếu text quá dài
+                    let fontSize = 28;
+                    if (messageText.length > 50) fontSize = 22;
+
+                    ctx.font = `bold ${fontSize}px 'Be Vietnam Pro', sans-serif`; // Font hỗ trợ tiếng Việt
+                    ctx.textAlign = 'center';
+
+                    // Vẽ message wrap text
+                    // Vị trí y bắt đầu từ khoảng 520
+                    wrapText(ctx, messageText, 256, 530, 460, fontSize + 8);
+
+                    texture.needsUpdate = true;
+                }, undefined, () => {
+                    // Error fallback
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, 512, 650);
+                    ctx.fillStyle = '#ffeebb';
+                    ctx.fillRect(20, 20, 472, 472);
+                    ctx.fillStyle = '#800000';
+                    ctx.font = 'bold 32px Cinzel';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('NO IMAGE', 256, 270);
+                    texture.needsUpdate = true;
+                });
+            });
+        }
+
+        function updateLyrics() {
+            const audio = document.getElementById('bg-music'); const lyricBox = document.getElementById('lyrics-text');
+            if (!audio || audio.paused || LYRICS_DATA.length === 0) return;
+            const t = audio.currentTime; let currentLine = "";
+            for (let i = 0; i < LYRICS_DATA.length; i++) { if (t >= LYRICS_DATA[i].time) { if (i === LYRICS_DATA.length - 1 || t < LYRICS_DATA[i + 1].time) { currentLine = LYRICS_DATA[i].text; break; } } }
+            if (lyricBox.innerText !== currentLine) lyricBox.innerText = currentLine;
+        }
+
+        function loadTextures() {
+            // Tạo texture snowflake bằng Canvas thay vì load file (fix missing snow.png)
+            const snowCanvas = document.createElement('canvas');
+            snowCanvas.width = 64; snowCanvas.height = 64;
+            const snowCtx = snowCanvas.getContext('2d');
+            snowCtx.fillStyle = 'rgba(0,0,0,0)';
+            snowCtx.fillRect(0, 0, 64, 64);
+            // Vẽ bông tuyết đơn giản
+            snowCtx.strokeStyle = 'white';
+            snowCtx.lineWidth = 2;
+            snowCtx.lineCap = 'round';
+            for (let i = 0; i < 6; i++) {
+                const angle = (Math.PI / 3) * i;
+                snowCtx.save();
+                snowCtx.translate(32, 32);
+                snowCtx.rotate(angle);
+                snowCtx.beginPath();
+                snowCtx.moveTo(0, 0);
+                snowCtx.lineTo(0, -24);
+                snowCtx.moveTo(0, -12);
+                snowCtx.lineTo(-6, -18);
+                snowCtx.moveTo(0, -12);
+                snowCtx.lineTo(6, -18);
+                snowCtx.stroke();
+                snowCtx.restore();
+            }
+            textureCache['Snowflake'] = new THREE.CanvasTexture(snowCanvas);
+
+            const cvs = document.createElement('canvas'); cvs.width = 64; cvs.height = 64; const ctx = cvs.getContext('2d');
+            const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 30); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.4, 'rgba(255,255,255,0.5)'); g.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = g; ctx.fillRect(0, 0, 64, 64); textureCache['Circle'] = new THREE.CanvasTexture(cvs);
+        }
+
+        function setupBackgroundParticles() {
+            const count = isMobile ? 200 : 1500;
+            bgParticleGroup = new THREE.Group(); bgParticleGroup.position.z = -12; scene.add(bgParticleGroup);
+            const starGeo = new THREE.BufferGeometry(); const starPos = [];
+            for (let i = 0; i < count; i++) starPos.push((Math.random() - 0.5) * 180, (Math.random() - 0.5) * 120, (Math.random() - 0.5) * 60);
+            starGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPos, 3));
+            bgParticleGroup.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xffeebb, size: 0.15, transparent: true, opacity: 0.8 })));
+        }
+
+        function updateBackgroundParticles(time, dt) {
+            if (!bgParticleGroup) return;
+            bgParticleGroup.rotation.z = Math.sin(time * 0.02) * 0.02; bgParticleGroup.rotation.y = Math.sin(time * 0.03) * 0.03;
+        }
+
+        function createPolaroids() {
+            // Chỉ tạo polaroid nếu có ảnh
+            if (NOEL_DATA.images.length === 0) {
+                console.log('ℹ️ Không có ảnh, bỏ qua tạo polaroid gallery');
+                polaroidGroup = null;
+                return;
+            }
+
+            polaroidGroup = new THREE.Group(); const geometry = new THREE.PlaneGeometry(1.5, 1.95); // Larger photos for slideshow feel
+            const count = NOEL_DATA.images.length;
+            const radius = 8.0; // Wider radius
+
+            for (let i = 0; i < count; i++) {
+                const material = new THREE.MeshBasicMaterial({ map: polaroidTextures[i % polaroidTextures.length], side: THREE.DoubleSide, transparent: true, opacity: 0 });
+                const polaroid = new THREE.Mesh(geometry, material);
+
+                // Arrange in a circle
+                const theta = (i / count) * Math.PI * 2;
+                const x = radius * Math.sin(theta);
+                const z = radius * Math.cos(theta);
+
+                // Position for Gallery Mode
+                const targetPos = new THREE.Vector3(x, 0, z);
+                // Look at center (camera)
+                const targetRotY = Math.atan2(x, z) + Math.PI; // Face inward towards viewer? Or outward? 
+                // To face camera when at back: atan2(x, z). 
+
+                polaroid.userData = {
+                    targetPos: targetPos,
+                    startPos: targetPos, // Start right in position
+                    floatOffset: Math.random() * 100,
+                    targetRot: { x: 0, y: targetRotY, z: 0 },
+                    originalIndex: i
+                };
+
+                polaroid.rotation.y = targetRotY;
+                polaroid.position.copy(targetPos);
+                polaroid.visible = true;
+                polaroid.material.opacity = 1; // Show immediately
+                polaroidGroup.add(polaroid);
+            }
+            scene.add(polaroidGroup);
+        }
+
+        function createLayerSystem(config) {
+            const geo = new THREE.BufferGeometry(); const pos = [], vel = [], off = [];
+            for (let i = 0; i < config.count; i++) {
+                const r = config.radius * Math.sqrt(Math.random()); const theta = Math.random() * 2 * Math.PI;
+                pos.push(r * Math.cos(theta), config.startY - Math.random() * (config.startY - config.endY), r * Math.sin(theta));
+                vel.push((Math.random() * 0.4) + 0.6); off.push(Math.random() * 100);
+            }
+            geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('velocity', new THREE.Float32BufferAttribute(vel, 1)); geo.setAttribute('offset', new THREE.Float32BufferAttribute(off, 1));
+            const mat = new THREE.PointsMaterial({ size: config.size, color: new THREE.Color(config.color), map: textureCache[config.shape], transparent: true, opacity: config.opacity, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+            const sys = new THREE.Points(geo, mat); sys.userData = { config: config }; particleSystems[config.id] = sys; scene.add(sys);
+        }
+
+        function toggleMode() {
+            if (isFireworkMode) return;
+            // Nếu không có ảnh, không cho vào gallery mode
+            if (NOEL_DATA.images.length === 0) {
+                console.log('ℹ️ Không có ảnh, không thể vào gallery mode');
+                return;
+            }
+            const now = clock.getElapsedTime(); if (now - lastSwitchTime < SWITCH_COOLDOWN) return;
+            lastSwitchTime = now; isGalleryMode = !isGalleryMode; const indicator = document.getElementById('mode-indicator');
+            if (isGalleryMode) {
+                indicator.innerText = "MODE: PHOTO GALLERY";
+                indicator.style.color = "#FFD700";
+
+                gsap.to(window, { duration: 1.2, jarOffsetY: -8, ease: "power2.inOut" });
+                if (polaroidGroup) {
+                    polaroidGroup.rotation.set(0, 0, 0);
+                    polaroidGroup.children.forEach((polaroid, index) => {
+                        polaroid.visible = true; polaroid.position.copy(polaroid.userData.startPos); polaroid.material.opacity = 0;
+                        const t = polaroid.userData.targetPos; const r = polaroid.userData.targetRot;
+                        gsap.to(polaroid.position, { x: t.x, y: t.y, z: t.z, duration: 1.2, ease: "power3.out", delay: index * 0.03 });
+                        gsap.to(polaroid.rotation, { x: 0, y: r.y, z: r.z, duration: 1.2, ease: "power3.out", delay: index * 0.03 });
+                        gsap.to(polaroid.material, { opacity: 1, duration: 0.8, delay: index * 0.03 });
+                    });
+                }
+            } else {
+                indicator.innerText = "MODE: JAR CONTROL";
+                indicator.style.color = "rgba(255, 215, 0, 0.7)";
+
+                gsap.to(window, { duration: 1.2, jarOffsetY: 0, ease: "back.out(0.8)", delay: 0.2 });
+                if (polaroidGroup) {
+                    polaroidGroup.children.forEach((polaroid, index) => {
+                        const s = polaroid.userData.startPos;
+                        gsap.to(polaroid.position, { x: s.x, y: s.y, z: s.z, duration: 1.0, ease: "power2.in", delay: index * 0.02 });
+                        gsap.to(polaroid.material, { opacity: 0, duration: 0.8, delay: index * 0.02 });
+                    });
+                }
+            }
+        }
+
+        function updateParticles(time) {
+            if (isFireworkMode) return;
+            Object.values(particleSystems).forEach(sys => {
+                const cfg = sys.userData.config;
+                if (cfg.id === 'inner_snow') { const alpha = 1.0 - Math.abs(jarOffsetY / 5.0); sys.material.opacity = Math.max(0, cfg.opacity * alpha); sys.position.y = jarOffsetY; }
+                const positions = sys.geometry.attributes.position.array; const velocities = sys.geometry.attributes.velocity.array; const offsets = sys.geometry.attributes.offset.array;
+                for (let i = 0; i < positions.length / 3; i++) {
+                    let ix = i * 3, iy = i * 3 + 1, iz = i * 3 + 2; positions[iy] -= velocities[i] * cfg.speed * 10;
+                    if (cfg.drift) { positions[ix] += Math.cos(time * 0.5 + offsets[i]) * cfg.drift * 0.1; positions[iz] += Math.sin(time * 0.3 + offsets[i]) * cfg.drift * 0.1; }
+                    if (positions[iy] < cfg.endY) { positions[iy] = cfg.startY; const r = cfg.radius * Math.sqrt(Math.random()); const t = Math.random() * 2 * Math.PI; positions[ix] = r * Math.cos(t); positions[iz] = r * Math.sin(t); }
+                    if (cfg.id === 'inner_snow') { const d = Math.sqrt(positions[ix] * positions[ix] + positions[iz] * positions[iz]); if (d > cfg.radius) { const ratio = (cfg.radius - 0.02) / d; positions[ix] *= ratio; positions[iz] *= ratio; } }
+                }
+                sys.geometry.attributes.position.needsUpdate = true;
+                if (carModel && cfg.rotateWithJar && inspectedPhoto === null && !isTouching) {
+                    sys.rotation.y = carModel.rotation.y; sys.rotation.x = carModel.rotation.x;
+                }
+            });
+        }
+
+        function updatePolaroids(time) {
+            if (isFireworkMode) return;
+            if (!polaroidGroup) return;
+
+            // Hand Gesture Rotation (Swipe effect)
+            // Nếu là FIST thì bỏ qua logic xoay tay để nó rơi vào auto rotate
+            if (STATE.hand.detected && inspectedPhoto === null && STATE.hand.gesture !== 'FIST') {
+                const x = STATE.hand.x;
+                let speed = 0;
+                if (x < 0.4) speed = (x - 0.4) * 0.08;
+                else if (x > 0.6) speed = (x - 0.6) * 0.08;
+                polaroidGroup.rotation.y += speed;
+            } else if (inspectedPhoto === null) {
+                // Auto rotate constant slide show
+                polaroidGroup.rotation.y += 0.002;
+            }
+
+            let closestDist = Infinity; let closestP = null;
+
+            // First pass: Find closest
+            polaroidGroup.children.forEach((p, i) => {
+                if (p === inspectedPhoto) return;
+                const worldPos = new THREE.Vector3();
+                p.getWorldPosition(worldPos);
+                const dist = worldPos.distanceTo(camera.position);
+                if (dist < closestDist) { closestDist = dist; closestP = p; }
+            });
+
+            // Second pass: Update visuals (Blur/Focus effect)
+            polaroidGroup.children.forEach((p, i) => {
+                if (p === inspectedPhoto) return;
+
+                const worldPos = new THREE.Vector3();
+                p.getWorldPosition(worldPos);
+                const dist = worldPos.distanceTo(camera.position);
+
+                // Simple floating effect
+                const off = p.userData.floatOffset;
+                p.position.y = p.userData.targetPos.y + Math.sin(time * 0.5 + off) * 0.2;
+
+                // FOCUS EFFECT
+                // Ảnh gần nhất (khoảng cách ~5-6) sẽ rõ, xa hơn sẽ mờ dần
+                let opacity = 1.0;
+                const minFocusDist = 7.0; // Khoảng cách bắt đầu mờ
+                const maxBlurDist = 14.0; // Khoảng cách mờ tối đa
+
+                if (dist > minFocusDist) {
+                    // Càng xa càng mờ, giảm xuống min 0.15
+                    const t = Math.min(1, Math.max(0, (dist - minFocusDist) / (maxBlurDist - minFocusDist)));
+                    opacity = 1.0 - (t * 0.85);
+                }
+
+                // Nếu là closestP thì force opacity cao nhất có thể (để highlight)
+                if (p === closestP) {
+                    opacity = 1.0;
+                    p.scale.lerp(new THREE.Vector3(1.15, 1.15, 1.15), 0.1);
+                } else {
+                    p.scale.lerp(new THREE.Vector3(1, 1, 1), 0.1);
+                }
+
+                // Áp dụng opacity
+                if (p.material) {
+                    p.material.transparent = true;
+                    p.material.opacity = opacity;
+                }
+            });
+        }
+
+
+        function getClosestPolaroid() {
+            if (!polaroidGroup) return null; let closest = null; let minDistance = Infinity;
+            polaroidGroup.children.forEach(p => {
+                const worldPos = new THREE.Vector3(); p.getWorldPosition(worldPos); const distance = worldPos.distanceTo(camera.position);
+                if (distance < minDistance && distance < 6.0) { minDistance = distance; closest = p; }
+            }); return closest;
+        }
+
+        function addFrameToPhoto(photo) {
+            // We can create a 2D DOM element or a 3D frame. DOM is easier for text.
+            const frame = document.createElement('div');
+            frame.id = 'photo-frame-overlay';
+            frame.style.position = 'absolute';
+            frame.style.top = '50%'; frame.style.left = '50%';
+            frame.style.transform = 'translate(-50%, -50%) scale(0.8)';
+            frame.style.width = '320px'; frame.style.height = '420px';
+            frame.style.border = '10px solid #FFD700'; // Gold frame
+            frame.style.boxShadow = '0 0 50px rgba(255, 215, 0, 0.5)';
+            frame.style.backdropFilter = 'blur(5px)'; // Requested blurry frame
+            frame.style.display = 'flex'; frame.style.flexDirection = 'column';
+            frame.style.justifyContent = 'flex-end'; frame.style.alignItems = 'center';
+            frame.style.pointerEvents = 'none'; frame.style.zIndex = '50';
+            frame.style.opacity = '0'; frame.style.transition = 'opacity 0.5s';
+
+            // Get Image URL from texture
+            // This is tricky with canvas texture. But we have NOEL_DATA.images
+            // We can just overlay transparently appropriately.
+            // Actually, let's just use CSS for the frame border and text. The 3D plane is the image.
+
+            const text = document.createElement('div');
+            text.innerText = "Giáng Sinh An Lành ❤️";
+            text.style.color = "#FFD700"; text.style.fontFamily = "'Pinyon Script', cursive";
+            text.style.fontSize = "36px"; text.style.marginBottom = "20px";
+            text.style.textShadow = "0 2px 4px rgba(0,0,0,0.8)";
+            frame.appendChild(text);
+
+            document.body.appendChild(frame);
+            setTimeout(() => frame.style.opacity = '1', 100);
+        }
+
+        function removeFrame() {
+            const frame = document.getElementById('photo-frame-overlay');
+            if (frame) {
+                frame.style.opacity = '0';
+                setTimeout(() => frame.remove(), 500);
+            }
+        }
+
+        // Hàm lấy ảnh theo thứ tự tuần tự (thay vì random/closest)
+        function getSequentialPolaroid() {
+            if (!polaroidGroup || polaroidGroup.children.length === 0) return null;
+
+            // Lấy ảnh theo originalIndex thay vì index mảng vì thứ tự mảng thay đổi khi attach/detach
+            const photo = polaroidGroup.children.find(p => p.userData.originalIndex === currentPhotoIndex);
+            return photo || null;
+        }
+
+        // Hàm hiển thị lời chúc cho ảnh
+        function showPhotoMessage(photoIndex) {
+            // Xóa message cũ nếu có
+            if (currentMessageEl) {
+                currentMessageEl.remove();
+                currentMessageEl = null;
+            }
+
+            // Lấy lời chúc từ PHOTO_MESSAGES
+            const messageData = PHOTO_MESSAGES.find(m => m.id === photoIndex + 1);
+            const messageText = messageData ? messageData.message : `Moment ${photoIndex + 1}`;
+
+            // Tạo element hiển thị lời chúc
+            currentMessageEl = document.createElement('div');
+            currentMessageEl.id = 'photo-message';
+            currentMessageEl.style.cssText = `
+                position: fixed;
+                bottom: 15%;
+                left: 50%;
+                transform: translateX(-50%);
+                font-family: 'Pinyon Script', cursive;
+                font-size: 28px;
+                color: #FFD700;
+                text-shadow: 0 2px 8px rgba(0,0,0,0.8), 0 0 20px rgba(255,215,0,0.3);
+                text-align: center;
+                z-index: 60;
+                padding: 10px 30px;
+                background: rgba(0,0,0,0.5);
+                border-radius: 10px;
+                border: 1px solid rgba(255,215,0,0.3);
+                opacity: 0;
+                transition: opacity 0.5s ease;
+                max-width: 80%;
+            `;
+            currentMessageEl.innerText = messageText;
+            document.body.appendChild(currentMessageEl);
+
+            // Fade in
+            setTimeout(() => currentMessageEl.style.opacity = '1', 100);
+        }
+
+        // Hàm ẩn lời chúc
+        function hidePhotoMessage() {
+            if (currentMessageEl) {
+                currentMessageEl.style.opacity = '0';
+                setTimeout(() => {
+                    if (currentMessageEl) {
+                        currentMessageEl.remove();
+                        currentMessageEl = null;
+                    }
+                }, 500);
+            }
+        }
+
+        function animatePhotoPopup(show) {
+            const now = clock.getElapsedTime();
+            const lyrics = document.getElementById('lyrics-container');
+
+            if (show) {
+                if (inspectedPhoto || now - lastDropTime < 0.8) return;
+
+                // Kiểm tra đã xem hết ảnh chưa
+                if (currentPhotoIndex >= TOTAL_PHOTOS) {
+                    console.log('Đã xem hết tất cả ảnh!');
+                    return;
+                }
+
+                // Lấy ảnh theo thứ tự tuần tự (thay vì closest)
+                inspectedPhoto = getSequentialPolaroid();
+                if (!inspectedPhoto) return;
+
+                // Hide lyrics to prevent overlap
+                if (lyrics) lyrics.style.opacity = 0;
+
+                // Auto-close after 5 seconds
+                if (autoCloseTimer) clearTimeout(autoCloseTimer);
+                autoCloseTimer = setTimeout(() => {
+                    if (isZoomedIn) {
+                        isZoomedIn = false;
+                        animatePhotoPopup(false);
+                    }
+                }, 5000);
+
+                scene.attach(inspectedPhoto); inspectedPhoto.visible = true; inspectedPhoto.material.opacity = 1;
+
+                // Move to center screen
+                gsap.to(inspectedPhoto.position, { x: 0, y: 0, z: camera.position.z - 4.0, duration: 0.8, ease: "back.out(1.2)" });
+                gsap.to(inspectedPhoto.rotation, { x: 0, y: 0, z: 0, duration: 0.8 });
+                gsap.to(inspectedPhoto.scale, { x: 1.2, y: 1.2, z: 1.2, duration: 0.8 });
+
+            } else {
+                if (autoCloseTimer) clearTimeout(autoCloseTimer);
+                if (!inspectedPhoto) return;
+
+                removeFrame();
+
+                // Show lyrics again
+                if (lyrics) lyrics.style.opacity = 1;
+
+                const p = inspectedPhoto;
+
+                // Đánh dấu ảnh đã xem và tăng index
+                viewedPhotos.add(currentPhotoIndex);
+                currentPhotoIndex++;
+
+                // Cập nhật UI hiển thị progress
+                const indicator = document.getElementById('mode-indicator');
+                if (indicator) {
+                    indicator.innerText = `GALLERY (${currentPhotoIndex}/${TOTAL_PHOTOS})`;
+                }
+
+                inspectedPhoto = null;
+                lastDropTime = now;
+
+                polaroidGroup.attach(p);
+                const t = p.userData.targetPos;
+                const r = p.userData.targetRot;
+
+                gsap.to(p.position, { x: t.x, y: t.y, z: t.z, duration: 0.8, ease: "back.out(1.0)" });
+                gsap.to(p.scale, { x: 1, y: 1, z: 1, duration: 0.7 });
+                if (isGalleryMode) gsap.to(p.rotation, { x: 0, y: r.y, z: r.z, duration: 0.7, ease: "power2.out" }); else gsap.to(p.material, { opacity: 0, duration: 0.5 });
+            }
+        }
+
+        function initHandTracking() {
+            const video = document.getElementById('input_video'); const canvas = document.getElementById('webcam-canvas'); const ctx = canvas.getContext('2d'); const stats = document.getElementById('cam-stats');
+            const hands = new Hands({ locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}` });
+
+            hands.setOptions({
+                maxNumHands: 1,
+                modelComplexity: 0,
+                minDetectionConfidence: 0.5,
+                minTrackingConfidence: 0.5
+            });
+
+            hands.onResults(results => {
+                canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+                ctx.save(); ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
+                STATE.hand.gesture = 'NONE';
+                if (results.multiHandLandmarks.length > 0) {
+                    STATE.hand.detected = true; const lm = results.multiHandLandmarks[0]; STATE.hand.x = 1 - lm[0].x; STATE.hand.y = lm[0].y;
+                    const tips = [8, 12, 16, 20]; const pips = [6, 10, 14, 18]; let extended = [];
+                    for (let i = 0; i < 4; i++) extended.push(Math.hypot(lm[tips[i]].x - lm[0].x, lm[tips[i]].y - lm[0].y) > Math.hypot(lm[pips[i]].x - lm[0].x, lm[pips[i]].y - lm[0].y));
+                    const pinchDist = Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y);
+                    const isFist = extended.every(e => e === false);
+
+                    if (extended[0] && extended[1] && !extended[2] && !extended[3]) STATE.hand.gesture = 'VICTORY';
+                    else if (isFist) STATE.hand.gesture = 'FIST';
+                    else if (pinchDist < 0.05) STATE.hand.gesture = 'PINCH';
+                    else STATE.hand.gesture = 'OPEN';
+                } else { if (STATE.hand.detected) { STATE.hand.detected = false; STATE.hand.gesture = 'NONE'; } }
+                ctx.restore();
+            });
+
+            let frameCounter = 0;
+            const cameraUtils = new Camera(video, {
+                onFrame: async () => {
+                    if (frameCounter % AI_SKIP_FRAMES === 0) {
+                        await hands.send({ image: video });
+                    }
+                    frameCounter++;
+                },
+                width: 320,
+                height: 240
+            });
+            cameraUtils.start();
+        }
+
+        // Thêm biến global chặn spam action
+        let lastActionTime = 0;
+        const ACTION_DEBOUNCE = 2.0;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const dt = clock.getDelta();
+            const time = clock.getElapsedTime();
+
+            if (mixer) mixer.update(dt);
+            updateLyrics(); updateParticles(time); updatePolaroids(time); updateBackgroundParticles(time, dt);
+
+            const currentGesture = STATE.hand.gesture;
+
+            if (currentGesture === 'VICTORY' && lastGesture !== 'VICTORY') {
+                // toggleMode(); 
+            }
+
+            // OPEN gesture: Xem ảnh (zoom in)
+            if (currentGesture === 'OPEN' && isGalleryMode && !isTouching) {
+                if (!isZoomedIn && currentPhotoIndex < TOTAL_PHOTOS) {
+                    if (time - lastActionTime > ACTION_DEBOUNCE) {
+                        isZoomedIn = true;
+                        lastActionTime = time;
+                        animatePhotoPopup(true);
+                    }
+                }
+            }
+
+            // FIST gesture: Đóng ảnh (zoom out) HOẶC kết thúc
+            if (currentGesture === 'FIST') {
+                if (isGalleryMode && isZoomedIn) {
+                    if (time - lastActionTime > ACTION_DEBOUNCE) {
+                        isZoomedIn = false;
+                        lastActionTime = time;
+                        animatePhotoPopup(false);
+                    }
+                } else if (!isFireworkMode && currentPhotoIndex >= TOTAL_PHOTOS) {
+                    if (lastGesture !== 'FIST') triggerFireworkMode();
+                }
+            }
+
+            lastGesture = currentGesture;
+
+            if (isTouching) {
+
+            } else if (STATE.hand.detected) {
+                const targetY = (STATE.hand.x - 0.5) * (Math.PI * 6.0);
+                const targetX = (STATE.hand.y - 0.5) * (Math.PI * 1.0);
+
+                STATE.currentRotation.x += (targetX - STATE.currentRotation.x) * 0.1;
+                STATE.currentRotation.y += (targetY - STATE.currentRotation.y) * 0.1;
+
+                if (inspectedPhoto === null) {
+                    if (!isGalleryMode) {
+                        if (carModel) { carModel.rotation.y = STATE.currentRotation.y; carModel.rotation.x = STATE.currentRotation.x; }
+                    }
+                    else if (carModel) {
+                        carModel.rotation.y = STATE.currentRotation.y * 0.5;
+                        carModel.rotation.x = STATE.currentRotation.x * 0.5;
+                    }
+                }
+            } else if (carModel && !isGalleryMode && inspectedPhoto === null) {
+                carModel.rotation.y += 0.4 * dt;
+                carModel.rotation.x *= 0.95;
+                STATE.currentRotation.y = carModel.rotation.y;
+                STATE.currentRotation.x = carModel.rotation.x;
+            }
+
+            if (!isGalleryMode) {
+                let ts, tp, tz;
+                if (isZoomedIn) { ts = SCENE_CONFIG.scaleNear; tp = SCENE_CONFIG.posNear; tz = SCENE_CONFIG.camZNear; }
+                else { ts = SCENE_CONFIG.scaleFar; tp = SCENE_CONFIG.posFar; tz = SCENE_CONFIG.camZFar; }
+                camera.position.z += (tz - camera.position.z) * SCENE_CONFIG.zoomSpeed;
+                if (carModel) { carModel.scale.setScalar(carModel.scale.x + (ts - carModel.scale.x) * SCENE_CONFIG.zoomSpeed); carModel.position.x += (tp.x - carModel.position.x) * SCENE_CONFIG.zoomSpeed; carModel.position.y += (tp.y - carModel.position.y) * SCENE_CONFIG.zoomSpeed; }
+            }
+            if (carModel) { carModel.position.y += jarOffsetY; if (jarOffsetY < -2) carModel.scale.setScalar((isZoomedIn ? SCENE_CONFIG.scaleNear : SCENE_CONFIG.scaleFar) * Math.max(0, 1 - (Math.abs(jarOffsetY) / 10))); }
+
+            if (composer && ENABLE_POST_PROCESSING) composer.render();
+            else renderer.render(scene, camera);
+        }
+        init();
     </script>
 </body>
+
 </html>

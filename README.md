@@ -1,54 +1,90 @@
-# Hand Gesture Particle System
+# New Year 2025 - Memory Universe 🎆
 
-Một ứng dụng web tương tác sử dụng thị giác máy tính (Computer Vision) và hệ thống hạt 3D để trực quan hóa các cử chỉ tay và giọng nói. Dự án này kết hợp **Three.js** cho đồ họa 3D và **MediaPipe Hands** để theo dõi chuyển động tay theo thời gian thực.
+Một trải nghiệm tương tác nghệ thuật biến album ảnh của bạn thành một vũ trụ kỷ niệm đầy ma thuật với hiệu ứng pháo hoa, confetti và điều khiển bằng cử chỉ tay.
 
 ## 🌟 Tính năng
 
-- **Theo dõi tay thời gian thực**: Sử dụng webcam để phát hiện bàn tay và ngón tay với độ trễ thấp.
-- **Hệ thống hạt 3D (Particle System)**: Hàng ngàn hạt ánh sáng tạo thành các chữ cái và hiệu ứng hình ảnh đẹp mắt.
-- **Điều khiển bằng cử chỉ**:
-  - ☝️ **1 Ngón**: Hiển thị chữ "I"
-  - ✌️ **2 Ngón**: Hiển thị chữ "LOVE"
-  - 🤟 **3 Ngón**: Hiển thị chữ "YOU"
-  - ✋ **4 Ngón**: Hiển thị trọn vẹn "I LOVE YOU"
-  - ✊ **Nắm tay (Fist)**: Thu nhỏ/Co cụm các hạt lại.
-  - 👋 **Mở tay**: Phân tán các hạt ra xung quanh.
-- **Chế độ Giọng nói (Voice Mode)**: Nói bất kỳ từ nào để các hạt tự động xếp thành chữ đó (Hỗ trợ tiếng Anh).
-- **Tương tác Vật lý**: Dùng tay để "chạm" và đẩy các hạt bay ra xa.
-- **Giao diện tùy biến**: Cửa sổ camera có thể kéo thả và thay đổi kích thước.
+- **Chọn ảnh dễ dàng**: Upload từ folder hoặc chọn nhiều files
+- **Hiệu ứng Tết 2025 lung linh**:
+  - 🎆 Pháo hoa bùng nổ
+  - ✨ Confetti vàng, bạc, đỏ rơi
+  - 💫 Ánh sáng vàng lấp lánh
+  - 🎇 Particles tạo chữ "2025"
+  
+- **Trải nghiệm tự động**:
+  1. Particles tụ lại thành chữ "2025"
+  2. "2025" bung nở thành vũ trụ ảnh
+  3. Ảnh bay lượn trong không gian 3D
+  4. Spotlight tự động làm nổi bật từng ảnh
+  
+- **Điều khiển bằng cử chỉ tay**:
+  - 👐 **Mở tay**: Zoom out, ảnh dàn ra
+  - ✊ **Nắm tay**: Zoom in, ảnh lại gần
+  - 👈👉 **Vuốt trái/phải**: Chuyển ảnh
+  - ☝️ **Chỉ tay**: Chọn ảnh để spotlight
 
-## 🛠️ Công nghệ sử dụng
+## 🛠️ Công nghệ
 
-- **Vite**: Build tool nhanh chóng và nhẹ.
-- **Three.js**: Thư viện 3D JavaScript mạnh mẽ.
-- **MediaPipe Hands**: Giải pháp theo dõi tay của Google.
-- **Web Speech API**: Nhận dạng giọng nói trực tiếp trên trình duyệt.
+- **Three.js**: Đồ họa 3D và hệ thống particles
+- **MediaPipe Hands**: Theo dõi cử chỉ tay real-time
+- **Vite**: Build tool nhanh và nhẹ
+- **Web APIs**: File reading, Canvas, Camera
 
-## 🚀 Cài đặt và Chạy dự án
+## 🚀 Cài đặt và Chạy
 
-Yêu cầu: Đã cài đặt [Node.js](https://nodejs.org/).
-
-1. **Cài đặt các gói phụ thuộc:**
+1. **Cài đặt dependencies:**
    ```bash
    npm install
    ```
 
-2. **Chạy dự án ở môi trường development:**
+2. **Chạy development server:**
    ```bash
    npm run dev
    ```
 
 3. **Mở trình duyệt:**
-   Truy cập đường dẫn hiển thị trong terminal (thường là `http://localhost:3000`).
-   *Lưu ý: Hãy cấp quyền truy cập Camera và Microphone khi được hỏi để ứng dụng hoạt động.*
+   - Truy cập `http://localhost:3001`
+   - Cấp quyền Camera và Microphone
+   - Chọn 10-50 ảnh (khuyến nghị để trải nghiệm tốt nhất)
 
 ## 📝 Hướng dẫn sử dụng
 
-1. **Khởi động**: Đợi hệ thống tải và cấp quyền Camera.
-2. **Điều khiển**:
-   - Đưa tay lên trước camera.
-   - Giơ số ngón tay tương ứng để thay đổi chữ.
-   - Di chuyển tay qua các hạt để thấy hiệu ứng tương tác.
-3. **Voice Mode**:
-   - Nhấn nút "Enable Voice Mode" trên giao diện.
-   - Nói to rõ ràng một từ tiếng Anh (ví dụ: "HELLO", "WORLD").
+1. **Chọn ảnh**: Click "Choose Folder" hoặc "Choose Files"
+2. **Đợi load**: Ảnh sẽ được tối ưu hóa tự động
+3. **Thưởng thức**:
+   - Xem "2025" hiện ra từ particles
+   - Ngắm ảnh bay trong không gian 3D
+   - Sử dụng tay để zoom và chuyển ảnh
+4. **Chụp lại**: Screenshot khung hình đẹp nhất!
+
+## 💝 Perfect For
+
+- 🎊 Đón năm mới 2025
+- 💑 Kỷ niệm tình yêu
+- 👨‍👩‍👧‍👦 Ảnh gia đình
+- 🎉 Bất kỳ dịp đặc biệt nào
+
+## 🎨 Tùy chỉnh
+
+Bạn có thể điều chỉnh trong file `index.html`:
+
+```javascript
+const CONFIG = {
+    maxPhotos: 100,           // Số ảnh tối đa
+    particleCount: 50000,     // Số particles chính
+    confettiCount: 3000,      // Số confetti
+    goldColor: 0xffd700,      // Màu vàng
+    // ... và nhiều hơn nữa
+};
+```
+
+## 📸 Lưu ý
+
+- Khuyến nghị: 20-50 ảnh cho hiệu suất tốt nhất
+- Ảnh sẽ tự động resize về 512px
+- Hoạt động tốt nhất trên Chrome/Edge
+- Canvas camera có thể kéo và resize
+
+---
+
+**Made with ❤️ for New Year 2025**
