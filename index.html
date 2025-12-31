@@ -421,7 +421,7 @@
             textEffectSeq: FIXED_VALUES.textEffectSeq,
             messages: FIXED_VALUES.messages,
             images: [],
-            song: './audio.mp3', // Local audio file
+            song: '/audio.mp3', // Local audio file
             songName: 'Last Christmas', // Fix cứng
             firework: false,
             LYRICS_DATA: [
@@ -518,7 +518,7 @@
                     '21.jpg', '22.jpg', '23.jpg', '24.jpg', '25.jpg', '26.jpg', '27.jpg', '28.jpg', '29.jpg', '30.jpg',
                     '31.jpg', '32.jpg', '33.webp', '34.jpg', '35.jpg', '36.png'
                 ];
-                NOEL_DATA.images = imageFiles.map(f => `./Img/${f}`);
+                NOEL_DATA.images = imageFiles.map(f => `/Img/${f}`);
             }
 
             // 3. Các cài đặt khác (bạn có thể sửa chữ ở đây)
@@ -844,9 +844,9 @@
                 startNoteEl.textContent = `♫ ${NOEL_DATA.songName}`;
             }
             if (bgMusicEl && NOEL_DATA.song) {
-                bgMusicEl.src = NOEL_DATA.song.startsWith('http') ? NOEL_DATA.song : `./${NOEL_DATA.song}`;
+                bgMusicEl.src = NOEL_DATA.song.startsWith('http') ? NOEL_DATA.song : NOEL_DATA.song;
             } else if (bgMusicEl) {
-                bgMusicEl.src = './audio.MP3';
+                bgMusicEl.src = '/audio.mp3';
             }
 
             const overlay = document.getElementById('start-overlay');
@@ -859,9 +859,9 @@
                 initTouchControls();
                 // Set audio source từ dữ liệu đã load
                 if (NOEL_DATA.song) {
-                    audio.src = NOEL_DATA.song.startsWith('http') ? NOEL_DATA.song : `./${NOEL_DATA.song}`;
+                    audio.src = NOEL_DATA.song.startsWith('http') ? NOEL_DATA.song : NOEL_DATA.song;
                 } else {
-                    audio.src = './audio.mp3';
+                    audio.src = '/audio.mp3';
                 }
                 audio.play().catch(e => { console.log("Audio Error:", e); });
             });
